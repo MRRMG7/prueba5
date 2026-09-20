@@ -1,0 +1,65 @@
+====================================================================
+SISTEMA DE LOGÍSTICA Y ENVÍOS - DESCRIPCIÓN Y REGLAS DEL PROYECTO
+====================================================================
+Credenciales
+Admin: admin', '123' 
+Conductor: rsilva', '123' 
+CLiente: jperez', '123'
+
+
+1. DESCRIPCIÓN GENERAL
+----------------------
+El Sistema de Logística y Envíos es una plataforma web integral diseñada para la 
+gestión, asignación y rastreo en tiempo real de entregas de paquetes en El Salvador.
+Permite a Administradores, Conductores y Clientes interactuar sobre una misma base 
+de datos y visualizar la ubicación geográfica de los pedidos mediante mapas interactivos.
+
+2. ARQUITECTURA DEL SISTEMA
+---------------------------
+- Backend: API REST construida con FastAPI (Python 3.10+), SQLAlchemy (ORM) y MySQL (PyMySQL).
+- Frontend: Interfaz web responsiva desarrollada en HTML5, CSS3 y JavaScript vanilla, 
+  con integración de MapLibre GL para cartografía y Nominatim (OpenStreetMap) para geocodificación.
+- Autenticación: Sistema de autenticación JWT / tokens y autenticación por roles.
+
+3. ROLES DE USUARIO Y PERMISOS
+------------------------------
+- ADMIN (Administrador):
+  * Acceso total (CRUD) sobre Clientes, Conductores, Vehículos y Pedidos.
+  * Capacidad de asignar o reasignar conductores y vehículos a cada pedido.
+  * Cambiar estados de cualquier pedido libremente.
+
+- CONDUCTOR:
+  * Acceso enfocado en "Mi Jornada".
+  * Visualización de pedidos que tienen asignado su ID de referencia (id_ref).
+  * Actualización de estado del paquete (ASIGNADO -> EN_CAMINO -> ENTREGADO / INCIDENCIA).
+
+- CLIENTE:
+  * Visualización de pedidos pertenecientes a su ID de cliente (id_ref).
+  * Registro de nuevos pedidos especificando ubicación en mapa y dirección.
+  * Cancelación de pedidos exclusivamente cuando están en estado PENDIENTE.
+
+4. ESTADOS DEL PEDIDO Y REGLAS DE TRANSICIÓN
+--------------------------------------------
+Los pedidos pasan por un flujo de estados controlado:
+- PENDIENTE: Pedido registrado por el cliente, pendiente de asignación de recursos.
+- ASIGNADO: Pedido que cuenta con conductor y vehículo asignados por el administrador.
+- EN_CAMINO: Conductor ha iniciado la ruta de entrega.
+- ENTREGADO: Entrega finalizada con éxito.
+- INCIDENCIA: Reporte de problema durante el proceso de entrega.
+- CANCELADO: Pedido anulado.
+
+Reglas de Negocio Estrictas:
+1. Transiciones Permitidas:
+   - PENDIENTE  -> ASIGNADO, CANCELADO
+   - ASIGNADO   -> EN_CAMINO, PENDIENTE, CANCELADO
+   - EN_CAMINO  -> ENTREGADO, INCIDENCIA
+   - INCIDENCIA -> EN_CAMINO, CANCELADO, ENTREGADO
+   - ENTREGADO  -> Estado final (No se puede modificar)
+   - CANCELADO  -> Estado final (No se puede modificar)
+
+2. Requisitos de Transición a 'EN_CAMINO':
+   - Un pedido NO puede pasar a 'EN_CAMINO' si no tiene un Conductor (id_conductor) y un Vehículo (id_vehiculo) asignados previamente.
+
+3. Restricciones por Rol:
+   - El Conductor solo puede actualizar pedidos asignados a su ID de referencia.
+   - El Cliente solo puede cancelar sus propios pedidos mientras permanezcan en estado PENDIENTE.

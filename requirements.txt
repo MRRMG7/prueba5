@@ -1,0 +1,25 @@
+# Sistema Logístico - Backend Python
+# Python 3.14.4
+
+# Framework Web
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+
+# Base de Datos
+sqlalchemy==2.0.25
+pymysql==1.1.0
+
+# Validación de Datos
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# Seguridad y Autenticación
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+
+# CORS
+python-multipart==0.0.6
+
+# Utilidades
+python-dateutil==2.8.2

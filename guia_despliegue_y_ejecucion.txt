@@ -1,0 +1,63 @@
+====================================================================
+INSTRUCCIONES PARA DESPLEGAR Y EJECUTAR EL PROYECTO EN OTRO EQUIPO
+====================================================================
+
+Sigue esta secuencia paso a paso para ejecutar el proyecto desde cero en cualquier computadora.
+
+PASO 1: PASAR ARCHIVOS AL NUEVO EQUIPO
+---------------------------------------
+Copia la carpeta completa del proyecto que contiene:
+- El script de la base de datos (`baseDatos.sql`)
+- El código del backend (`backend.py`)
+- La página web del frontend (`pagina.html`)
+
+PASO 2: CONFIGURAR LA BASE DE DATOS MYSQL
+-----------------------------------------
+1. Inicia el servicio de MySQL Server en el nuevo equipo.
+2. Abre la consola de MySQL o MySQL Workbench e importa el script SQL.
+3. Asegúrate de que la base de datos `logistica_db` esté creada con sus tablas y datos iniciales.
+
+PASO 3: PREPARAR EL ENTORNO DE PYTHON
+--------------------------------------
+1. Abre una terminal o consola de comandos en la carpeta del proyecto.
+2. Crea y activa un entorno virtual de Python:
+   - Windows: `python -m venv venv` y luego `.env\Scriptsctivate`
+   - Linux/Mac: `python3 -m venv venv` y luego `source venv/bin/activate`
+3. Instala las dependencias necesarias:
+   `pip install fastapi uvicorn sqlalchemy pymysql pydantic python-jose`
+
+PASO 4: VERIFICAR LA CONFIGURACIÓN DEL BACKEND
+----------------------------------------------
+Abre `backend.py` y ajusta la constante `DATABASE_URL` con el usuario, contraseña y host 
+de MySQL correspondiente al nuevo equipo.
+
+PASO 5: INICIAR EL SERVIDOR BACKEND (FASTAPI)
+---------------------------------------------
+En la terminal con el entorno virtual activado, ejecuta:
+
+  uvicorn backend:app --reload --host 0.0.0.0 --port 8000
+
+- `--reload`: Reinicia el servidor automáticamente si haces cambios en el código.
+- `--host 0.0.0.0`: Permite recibir peticiones desde la misma máquina o desde cualquier otro equipo de la red local.
+- `--port 8000`: Puerto en el que escuchará el API REST.
+
+Podrás acceder a la documentación interactiva de la API abriendo en tu navegador:
+  http://localhost:8000/docs
+
+PASO 6: CONFIGURAR Y ABRIR EL FRONTEND
+--------------------------------------
+1. Abre el archivo `pagina.html` en un editor de texto o código.
+2. Revisa la constante `API_BASE_URL` al inicio del script JavaScript:
+   - Si corres el frontend en la misma máquina que el backend:
+     `const API_BASE_URL = "http://localhost:8000";`
+   - Si el backend está en otra máquina de la red local (ej. IP 192.168.1.100):
+     `const API_BASE_URL = "http://192.168.1.100:8000";`
+3. Abre `pagina.html` haciendo doble clic para abrirlo en el navegador web (Chrome, Edge, Firefox).
+
+PASO 7: PRUEBA DE FUNCIONAMIENTO
+--------------------------------
+1. En la pantalla de Login, selecciona el rol 'Administrador' e ingresa:
+   - Usuario: admin
+   - Contraseña: 123
+2. Verifica que puedes ver el panel general, mapa con ubicaciones y tablas de pedidos.
+3. Prueba iniciar sesión con el usuario conductor (`rsilva` / `123`) o cliente (`jperez` / `123`) para confirmar el comportamiento de roles.

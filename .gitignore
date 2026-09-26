@@ -21,6 +21,9 @@ Thumbs.db
 # Node / frontend-react
 node_modules/
 dist/
+dist_viejo/
+dist-*/
+*.tsbuildinfo
 
 # Claves de acceso (AWS)
 *.pem

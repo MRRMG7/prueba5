@@ -17,11 +17,12 @@ function Router() {
   if (sesion.rol === "ADMIN") return <AdminDashboard />;
   if (sesion.rol === "CONDUCTOR") return <ConductorPanel />;
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-100 text-slate-600">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4" style={{ background: "var(--papel-100)", color: "var(--tinta-500)" }}>
       <p>Panel {sesion.rol} en construcción.</p>
       <button
         onClick={logout}
-        className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-200"
+        className="rounded-md border px-4 py-2 text-sm font-medium transition"
+        style={{ borderColor: "var(--linea-borde)", color: "var(--tinta-500)", background: "transparent" }}
       >
         Cerrar sesión
       </button>

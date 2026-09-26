@@ -142,22 +142,23 @@ export default function FormPedido({
   }
 
   const inputCls =
-    "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none";
-  const labelCls = "mb-1 block text-sm font-medium text-slate-700";
+    "w-full rounded-lg border px-3 py-2 text-sm focus:outline-none" +
+    " style-input";
+  const labelCls = "mb-1 block text-sm font-medium";
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 overflow-y-auto">
       <form
         onSubmit={enviar}
-        className="mt-10 w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl"
+        className="mt-10 w-full max-w-lg rounded-2xl p-6 shadow-xl tarjeta-modal"
       >
-        <h3 className="text-lg font-bold text-slate-800">
+        <h3 className="text-lg font-bold">
           {pedido ? `Editar pedido #${pedido.id_pedido}` : "Nuevo pedido"}
         </h3>
         {pedido && (
-          <p className="mt-1 text-xs font-medium text-slate-500">
+          <p className="mt-1 text-xs font-medium text-suave">
             Nº de seguimiento:{" "}
-            <span className="font-mono font-semibold text-slate-700">#{pedido.id_pedido}</span>
+            <span className="font-mono font-semibold">#{pedido.id_pedido}</span>
           </p>
         )}
 
@@ -239,10 +240,10 @@ export default function FormPedido({
           </div>
 
           <div>
-            <div className="h-[220px] w-full overflow-hidden rounded-lg border border-slate-300">
+            <div className="h-[220px] w-full overflow-hidden rounded-lg border style-input">
               <div ref={mapaCont} className="h-full w-full" />
             </div>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-suave">
               Arrastrá el pin rojo o hacé clic en el mapa para ajustar la dirección y las coordenadas.
             </p>
           </div>

@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   db:
     image: mysql:8.0
@@ -29,13 +27,14 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ./frontend-react
       dockerfile: Dockerfile
-
     depends_on:
       - backend
     ports:
-      - "8001:8001"
+      - "8001:3000"
+    volumes:
+      - ./frontend-react/src:/app/src
 
 volumes:
   db_data:

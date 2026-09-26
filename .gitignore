@@ -17,3 +17,11 @@ Thumbs.db
 # Archivos locales de configuración
 *.local
 .env
+
+# Node / frontend-react
+node_modules/
+dist/
+
+# Claves de acceso (AWS)
+*.pem
+*.ppk

@@ -1,0 +1,9 @@
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.git/
+frontend-react/node_modules/
+frontend-react/dist/
+data/
+pagina.pdf

@@ -280,6 +280,7 @@ export default function Inicio({ onEntrar }: Props) {
 
       <footer className="inicio-pie">
         <p>Sistema de Gestión de Transporte y Entregas · El Salvador</p>
+        <span className="inicio-pie-version">build v1.0 · prueba de flujo GitHub</span>
         <button type="button" className="link-suave" onClick={onEntrar}>
           Acceso administrativo
         </button>

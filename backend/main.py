@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
@@ -17,6 +19,8 @@ app = FastAPI(
     title="API Sistema de Logística y Envíos",
     description="Backend organizado en módulos",
     version="2.0.0",
+    docs_url=None if os.getenv("APP_MODE") == "production" else "/docs",
+    redoc_url=None if os.getenv("APP_MODE") == "production" else "/redoc",
 )
 
 @app.get("/version")

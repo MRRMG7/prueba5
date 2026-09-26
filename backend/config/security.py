@@ -1,9 +1,10 @@
+import os
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import jwt
 from fastapi.security import OAuth2PasswordBearer
 
-SECRET_KEY = "tu_clave_secreta_super_segura_para_desarrollo_local"
+SECRET_KEY = os.getenv("SECRET_KEY", "tu_clave_secreta_super_segura_para_desarrollo_local")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 120
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/token", auto_error=False)

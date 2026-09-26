@@ -19,6 +19,10 @@ app = FastAPI(
     version="2.0.0",
 )
 
+@app.get("/version")
+def version():
+    return {"app": "Sistema de Logística y Envíos", "version": "1.0.0"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

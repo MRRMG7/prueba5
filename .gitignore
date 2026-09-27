@@ -28,3 +28,6 @@ dist-*/
 # Claves de acceso (AWS)
 *.pem
 *.ppk
+
+# Evidencias de entrega subidas en runtime (fotos y firmas)
+backend/uploads/

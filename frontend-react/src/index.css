@@ -469,6 +469,25 @@ input, select, textarea { font-family: inherit; }
   .inicio-pie { flex-direction: column; align-items: flex-start; }
 }
 
+@media (max-width: 640px) {
+  .inicio-hero { padding: 24px 16px 56px; }
+  .inicio-top { width: 100%; }
+  .inicio-top .marca { margin-bottom: 0; }
+  .inicio-btn-acceso { width: 100%; text-align: center; padding: 11px 20px; }
+  .inicio-hero-cuerpo { gap: 28px; padding-top: 32px; }
+  .inicio-ruta { min-height: 130px; }
+  .inicio-busqueda-card { padding: 20px 18px; }
+  .inicio-busqueda-card h2 { font-size: 18px; }
+  .buscar-form { flex-direction: column; }
+  .buscar-form .btn { width: 100%; padding: 12px; }
+  .datos { grid-template-columns: 1fr; }
+  .inicio-seccion { padding: 44px 16px; }
+  .inicio-pie { padding: 22px 4px 34px; font-size: 12px; }
+  .inicio-mapa { height: 200px; }
+  .pasos { gap: 0; }
+  .paso-etiqueta { font-size: 10px; }
+}
+
 /* =========================================================
    PANEL CONDUCTOR
    ========================================================= */
@@ -874,4 +893,18 @@ input, select, textarea { font-family: inherit; }
   .side-link { white-space: nowrap; }
   .side-pie { display: none; }
   .form-grid-2, .form-grid-3, .form-grid-4 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .panel-formulario { padding: 16px; }
+  .form-titulo { font-size: 20px; }
+  .form-subtitulo { font-size: 13px; }
+  .campo input, .campo select, .campo textarea { padding: 11px; font-size: 16px; }
+  .btn-entrar { padding: 14px; font-size: 15px; }
+  .panel { padding: 18px 14px 48px; }
+  .cabecera-tarjeta { padding: 16px 16px 10px; }
+  .cuerpo-tarjeta { padding: 0 16px 18px; }
+  .panel-top { gap: 10px; }
+  .fila-conteos { gap: 6px; }
+  .buscar-form input, .buscar-form .btn, .campo input { font-size: 16px; }
 }

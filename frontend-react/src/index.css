@@ -646,6 +646,16 @@ input, select, textarea { font-family: inherit; }
   padding: 10px 12px;
 }
 
+.ok-login {
+  margin-top: 2px;
+  color: #0b8378;
+  font-size: 12.5px;
+  background: rgba(46, 196, 182, .1);
+  border: 1px solid rgba(46, 196, 182, .35);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
 .campo select, .campo textarea {
   border: 1px solid var(--linea-borde);
   border-radius: var(--radio-s);

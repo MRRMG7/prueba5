@@ -8,6 +8,7 @@ import type { Cliente, Pedido } from "../types";
 import EstadoPill from "../components/EstadoPill";
 import TarjetaConteo from "../components/TarjetaConteo";
 import EntregaModal from "../components/EntregaModal";
+import CambiarPasswordModal from "../components/CambiarPasswordModal";
 
 const COLOR_ESTADOS: Record<string, string> = {
   PENDIENTE: "#64748b",
@@ -23,6 +24,7 @@ export default function ConductorPanel() {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [modalEntrega, setModalEntrega] = useState<{ pedido: Pedido; modo: "entrega" | "incidencia" } | null>(null);
+  const [modalPassword, setModalPassword] = useState(false);
   const mapaCont = useRef<HTMLDivElement>(null);
   const mapaRef = useRef<maplibregl.Map | null>(null);
 
@@ -45,7 +47,7 @@ export default function ConductorPanel() {
     cargar().catch(() => {});
     const id = setInterval(() => {
       if (!document.hidden) cargar().catch(() => {});
-    }, 3000);
+    }, 10000);
     return () => clearInterval(id);
   }, []);
 
@@ -136,6 +138,9 @@ export default function ConductorPanel() {
         </div>
         <div className="conductor-usuario">
           <span>{sesion?.nombre}</span>
+          <button type="button" className="conductor-btn-salir" onClick={() => setModalPassword(true)}>
+            Cambiar clave
+          </button>
           <button type="button" className="conductor-btn-salir" onClick={logout}>
             Salir
           </button>
@@ -241,6 +246,8 @@ export default function ConductorPanel() {
           onGuardado={cargar}
         />
       )}
+
+      {modalPassword && <CambiarPasswordModal onCerrar={() => setModalPassword(false)} />}
     </div>
   );
 }

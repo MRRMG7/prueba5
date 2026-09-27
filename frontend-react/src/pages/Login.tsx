@@ -2,7 +2,13 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useAuth } from "../auth";
 
-export default function Login({ onVolver }: { onVolver?: () => void }) {
+export default function Login({
+  onVolver,
+  onRegistro,
+}: {
+  onVolver?: () => void;
+  onRegistro?: () => void;
+}) {
   const { login } = useAuth();
   const [usuario, setUsuario] = useState("");
   const [password, setPassword] = useState("");
@@ -108,6 +114,11 @@ export default function Login({ onVolver }: { onVolver?: () => void }) {
             </button>
           </form>
 
+          {onRegistro && (
+            <button type="button" className="link-suave" onClick={onRegistro}>
+              ¿Sos repartidor? Crear cuenta
+            </button>
+          )}
           {onVolver && (
             <button type="button" className="link-suave" onClick={onVolver}>
               ← Volver al inicio

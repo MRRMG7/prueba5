@@ -7,6 +7,7 @@ import ConductoresTab from "./ConductoresTab";
 import VehiculosTab from "./VehiculosTab";
 import ClientesTab from "./ClientesTab";
 import TarjetaConteo from "../../components/TarjetaConteo";
+import CambiarPasswordModal from "../../components/CambiarPasswordModal";
 
 type Seccion = "resumen" | "paquetes" | "conductores" | "vehiculos" | "clientes";
 
@@ -90,6 +91,7 @@ function Icono({ id }: { id: Seccion }) {
 export default function AdminDashboard() {
   const { sesion, logout } = useAuth();
   const [seccion, setSeccion] = useState<Seccion>("resumen");
+  const [modalPassword, setModalPassword] = useState(false);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [conductores, setConductores] = useState<Conductor[]>([]);
   const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
@@ -112,7 +114,7 @@ export default function AdminDashboard() {
     cargar().catch(() => {});
     const id = setInterval(() => {
       if (!document.hidden) cargar().catch(() => {});
-    }, 3000);
+    }, 10000);
     return () => clearInterval(id);
   }, []);
 
@@ -169,6 +171,9 @@ export default function AdminDashboard() {
             <br />
             Administrador · @{sesion.usuario}
           </p>
+          <button className="salir-side" onClick={() => setModalPassword(true)}>
+            Cambiar clave
+          </button>
           <button className="salir-side" onClick={logout}>
             Cerrar sesión
           </button>
@@ -257,6 +262,8 @@ export default function AdminDashboard() {
           {seccion === "clientes" && <ClientesTab clientes={clientes} pedidos={pedidos} onCambio={cargar} />}
         </div>
       </main>
+
+      {modalPassword && <CambiarPasswordModal onCerrar={() => setModalPassword(false)} />}
     </div>
   );
 }

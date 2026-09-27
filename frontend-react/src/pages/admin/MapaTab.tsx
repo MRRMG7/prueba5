@@ -40,6 +40,13 @@ export default function MapaTab({ pedidos, clientes, conductores, vehiculos, onC
   pedidosRef.current = pedidos;
   const clientesRef = useRef(clientes);
   clientesRef.current = clientes;
+  const ultimaFirma = useRef("");
+
+  const firmaPedidos = useCallback((lista: Pedido[]) => {
+    return lista
+      .map((p) => `${p.id_pedido}:${p.estado}:${p.latitud},${p.longitud}`)
+      .join("|");
+  }, []);
 
   const actualizarCoords = useCallback((lat: number, lng: number) => {
     setCoords({ lat, lng });
@@ -89,6 +96,9 @@ export default function MapaTab({ pedidos, clientes, conductores, vehiculos, onC
   useEffect(() => {
     const mapa = mapaRef.current;
     if (!mapa) return;
+    const firma = firmaPedidos(pedidos);
+    if (firma === ultimaFirma.current) return;
+    ultimaFirma.current = firma;
     // marcadores de pedidos activos
     for (const nombre of ["marcadores-pedidos"]) {
       const borne = (mapa as unknown as Record<string, unknown>)[nombre];

@@ -11,9 +11,15 @@ from sqlalchemy.orm import Session
 from config.database import get_db, engine
 from config.security import verify_password, create_access_token
 from models.database_models import Base, ClienteModel, ConductorModel, RolEnum, UsuarioModel, HistorialPedidoModel, PedidoModel
-from models.schemas import LoginRequest, RegistroCliente, Token
+from models.schemas import LoginRequest, RegistroCliente, RegistroConductor, CambiarPassword, Token
 from routes import clientes, conductores, vehiculos, pedidos
-from routes.auth import get_current_user, get_current_user_optional, registrar_cliente
+from routes.auth import (
+    get_current_user,
+    get_current_user_optional,
+    registrar_cliente,
+    registrar_conductor,
+    cambiar_password,
+)
 
 # Crear tablas en la base de datos
 Base.metadata.create_all(bind=engine)
@@ -120,6 +126,18 @@ def login_for_access_token(
 @app.post("/registro", status_code=status.HTTP_201_CREATED)
 def registrar_cliente_route(registro: RegistroCliente, db: Session = Depends(get_db)):
     return registrar_cliente(registro, db)
+
+@app.post("/registro-conductor", status_code=status.HTTP_201_CREATED)
+def registrar_conductor_route(registro: RegistroConductor, db: Session = Depends(get_db)):
+    return registrar_conductor(registro, db)
+
+@app.post("/cambiar-password")
+def cambiar_password_route(
+    body: CambiarPassword,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
+    return cambiar_password(body, db, _user)
 
 # ==========================================
 # RUTAS DE CLIENTES

@@ -4,13 +4,22 @@ import Login from "./pages/Login";
 import Inicio from "./pages/Inicio";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ConductorPanel from "./pages/ConductorPanel";
+import RegistroConductor from "./pages/RegistroConductor";
 
 function Router() {
   const { sesion, logout } = useAuth();
-  const [vista, setVista] = useState<"inicio" | "login">("inicio");
+  const [vista, setVista] = useState<"inicio" | "login" | "registro">("inicio");
   if (!sesion) {
+    if (vista === "registro") {
+      return <RegistroConductor onVolver={() => setVista("login")} />;
+    }
     if (vista === "login") {
-      return <Login onVolver={() => setVista("inicio")} />;
+      return (
+        <Login
+          onVolver={() => setVista("inicio")}
+          onRegistro={() => setVista("registro")}
+        />
+      );
     }
     return <Inicio onEntrar={() => setVista("login")} />;
   }

@@ -482,6 +482,8 @@ input, select, textarea { font-family: inherit; }
 
 .link-suave:hover { color: var(--teal); }
 
+.link-suave + .link-suave { margin-top: 12px; }
+
 @media (max-width: 860px) {
   .inicio-top { flex-direction: column; align-items: flex-start; gap: 14px; }
   .inicio-hero-cuerpo { grid-template-columns: 1fr; gap: 34px; padding-top: 36px; }

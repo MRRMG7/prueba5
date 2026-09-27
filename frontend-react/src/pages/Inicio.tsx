@@ -169,6 +169,13 @@ export default function Inicio({ onEntrar }: Props) {
 
             {pedido && meta && (
               <div className="inicio-resultado">
+                <button
+                  type="button"
+                  className="inicio-volver"
+                  onClick={() => { setPedido(null); setBusqueda(""); setError(""); }}
+                >
+                  ← Volver al inicio
+                </button>
                 <div
                   className="inicio-banner"
                   style={{ background: meta.fondo, color: meta.color, border: `1px solid ${meta.color}` }}

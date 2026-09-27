@@ -308,6 +308,26 @@ input, select, textarea { font-family: inherit; }
   padding-top: 16px;
 }
 
+.inicio-volver {
+  display: block;
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 9px 12px;
+  border: 1px solid var(--linea-borde);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--tinta-900);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.inicio-volver:hover {
+  background: var(--fondo-alt, rgba(128, 128, 128, 0.08));
+}
+
 .inicio-banner {
   display: flex;
   justify-content: space-between;

@@ -57,6 +57,45 @@ def _migrar_usuarios():
 
 _migrar_usuarios()
 
+# Migración: garantizar que el ENUM de rol acepte PROVEEDOR en tablas ya creadas
+def _migrar_rol_proveedor():
+    insp = sa_inspect(engine)
+    if not insp.has_table("usuarios"):
+        return
+    dialecto = engine.dialect.name
+    if dialecto in ("mysql", "mariadb"):
+        with engine.begin() as conn:
+            conn.execute(text(
+                "ALTER TABLE usuarios MODIFY rol "
+                "ENUM('ADMIN','CONDUCTOR','CLIENTE','PROVEEDOR') NOT NULL"
+            ))
+    elif dialecto == "sqlite":
+        with engine.begin() as conn:
+            ddl = conn.execute(text("SELECT sql FROM sqlite_master WHERE type='table' AND name='usuarios'")).scalar()
+            if ddl and "PROVEEDOR" in ddl.upper():
+                return
+        tabla_actual = insp.get_columns("usuarios")
+        def_sql = """CREATE TABLE usuarios_nueva (
+            id_usuario INTEGER PRIMARY KEY,
+            username VARCHAR(50) NOT NULL UNIQUE,
+            password_hash VARCHAR(255) NOT NULL,
+            rol VARCHAR(10) NOT NULL CHECK (rol IN ('ADMIN','CONDUCTOR','CLIENTE','PROVEEDOR')),
+            id_ref INTEGER NULL,
+            foto VARCHAR(255) NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )"""
+        actuales = ", ".join('"' + c["name"] + '"' for c in tabla_actual)
+        with engine.begin() as conn:
+            conn.execute(text("PRAGMA foreign_keys=OFF"))
+            conn.execute(text(def_sql))
+            conn.execute(text(
+                f"INSERT INTO usuarios_nueva ({actuales}) SELECT {actuales} FROM usuarios"
+            ))
+            conn.execute(text("DROP TABLE usuarios"))
+            conn.execute(text("ALTER TABLE usuarios_nueva RENAME TO usuarios"))
+
+_migrar_rol_proveedor()
+
 app = FastAPI(
     title="API Sistema de Logística y Envíos",
     description="Backend organizado en módulos",

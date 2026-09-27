@@ -1196,3 +1196,51 @@ input, select, textarea { font-family: inherit; }
   border: 1px solid var(--linea-borde);
 }
 .inicio-h-foto { text-decoration: none; }
+
+/* =========================================================
+   MODAL DE EVIDENCIA (lightbox)
+   ========================================================= */
+.evidencia-fondo {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 200;
+}
+.evidencia-caja {
+  background: var(--superficie);
+  border-radius: 14px;
+  max-width: 560px;
+  width: 100%;
+  padding: 14px;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.35);
+}
+.evidencia-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.evidencia-titulo {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tinta-900);
+}
+.evidencia-imagen {
+  display: block;
+  width: 100%;
+  max-height: 60dvh;
+  object-fit: contain;
+  border-radius: var(--radio-s);
+  background: #fff;
+}
+.evidencia-abrir {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+  text-decoration: none;
+}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { api, nombreCliente, urlArchivo } from "../../api";
 import type { Cliente, Conductor, Pedido } from "../../types";
 import EstadoPill from "../../components/EstadoPill";
+import EvidenciaModal from "../../components/EvidenciaModal";
 import FormPedido from "./FormPedido";
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
 
 export default function PedidosTab({ pedidos, clientes, conductores, onCambio }: Props) {
   const [editando, setEditando] = useState<Pedido | null>(null);
+  const [evidencia, setEvidencia] = useState<string | null>(null);
   const lista = [...pedidos].sort((a, b) => b.id_pedido - a.id_pedido);
 
   async function reasignar(p: Pedido) {
@@ -124,14 +126,9 @@ export default function PedidosTab({ pedidos, clientes, conductores, onCambio }:
                   </td>
                   <td>
                     {p.foto_entrega ? (
-                      <a
-                        className="btn"
-                        href={urlArchivo(p.foto_entrega)}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
+                      <button className="btn" onClick={() => setEvidencia(urlArchivo(p.foto_entrega))}>
                         📷 Ver
-                      </a>
+                      </button>
                     ) : (
                       <span className="celda-suave">—</span>
                     )}
@@ -162,6 +159,14 @@ export default function PedidosTab({ pedidos, clientes, conductores, onCambio }:
 
       {editando && (
         <FormPedido pedido={editando} onCerrar={() => setEditando(null)} onGuardado={onCambio} />
+      )}
+
+      {evidencia && (
+        <EvidenciaModal
+          url={evidencia}
+          titulo="Evidencia de entrega"
+          onCerrar={() => setEvidencia(null)}
+        />
       )}
     </section>
   );

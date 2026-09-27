@@ -5,6 +5,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { ESTADO_META, api, nombreCliente, nombreConductor, formatearFecha, urlArchivo } from "../api";
 import { ESTILO_MAPA } from "../mapa";
 import type { Cliente, Conductor, Pedido, HistorialEntrega } from "../types";
+import EvidenciaModal from "../components/EvidenciaModal";
 
 const PASOS: { estado: Pedido["estado"]; etiqueta: string; detalle: string }[] = [
   { estado: "PENDIENTE", etiqueta: "Pedido creado", detalle: "Recibimos tu solicitud." },
@@ -32,6 +33,7 @@ export default function Inicio({ onEntrar }: Props) {
   const [cargando, setCargando] = useState(false);
   const [pedido, setPedido] = useState<Pedido | null>(null);
   const [historial, setHistorial] = useState<HistorialEntrega[]>([]);
+  const [evidencia, setEvidencia] = useState<string | null>(null);
   const [datos, setDatos] = useState<{ clientes: Cliente[]; conductores: Conductor[] }>({
     clientes: [],
     conductores: [],
@@ -257,10 +259,14 @@ export default function Inicio({ onEntrar }: Props) {
                                   </div>
                                 )}
                                 {h.foto && (
-                                  <a href={urlArchivo(h.foto)} target="_blank" rel="noreferrer" className="inicio-h-foto">
+                                  <button
+                                    type="button"
+                                    className="inicio-h-foto"
+                                    onClick={() => setEvidencia(urlArchivo(h.foto))}
+                                  >
                                     <img src={urlArchivo(h.foto)} alt="Evidencia de entrega" />
                                     <small>Ver evidencia</small>
-                                  </a>
+                                  </button>
                                 )}
                               </div>
                             )}
@@ -279,6 +285,14 @@ export default function Inicio({ onEntrar }: Props) {
           </div>
         </div>
       </header>
+
+      {evidencia && (
+        <EvidenciaModal
+          url={evidencia}
+          titulo="Evidencia de entrega"
+          onCerrar={() => setEvidencia(null)}
+        />
+      )}
 
       <section className="inicio-seccion">
         <div className="inicio-seccion-interior">

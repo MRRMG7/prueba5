@@ -8,7 +8,7 @@ from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from config.database import get_db
-from models.database_models import PedidoModel, ClienteModel, ConductorModel, VehiculoModel, RolEnum, EstadoPedidoEnum, UsuarioModel, HistorialPedidoModel
+from models.database_models import PedidoModel, ClienteModel, ConductorModel, VehiculoModel, RolEnum, EstadoPedidoEnum, UsuarioModel, HistorialPedidoModel, ProveedorModel
 from models.schemas import PedidoCreate, PedidoUpdateState, PedidoResponse, HistorialResponse
 
 UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads"
@@ -82,6 +82,8 @@ def listar_pedidos_filtrados(
             return db.query(PedidoModel).filter(PedidoModel.id_conductor == current_user.id_ref).all()
         elif current_user.rol == RolEnum.CLIENTE:
             return db.query(PedidoModel).filter(PedidoModel.id_cliente == current_user.id_ref).all()
+        elif current_user.rol == RolEnum.PROVEEDOR:
+            return db.query(PedidoModel).filter(PedidoModel.id_proveedor == current_user.id_ref).all()
     return db.query(PedidoModel).all()
 
 def crear_pedido(
@@ -129,6 +131,9 @@ def crear_pedido(
         id_cliente=pedido_in.id_cliente,
         id_conductor=pedido_in.id_conductor,
         id_vehiculo=pedido_in.id_vehiculo,
+        id_proveedor=pedido_in.id_proveedor
+        if pedido_in.id_proveedor is not None
+        else (current_user.id_ref if current_user and current_user.rol == RolEnum.PROVEEDOR else None),
         direccion=pedido_in.direccion,
         latitud=pedido_in.latitud,
         longitud=pedido_in.longitud,

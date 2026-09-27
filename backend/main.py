@@ -10,14 +10,15 @@ from sqlalchemy.orm import Session
 
 from config.database import get_db, engine
 from config.security import verify_password, create_access_token
-from models.database_models import Base, ClienteModel, ConductorModel, RolEnum, UsuarioModel, HistorialPedidoModel, PedidoModel
-from models.schemas import LoginRequest, RegistroCliente, RegistroConductor, CambiarPassword, Token, FotoPerfil
-from routes import clientes, conductores, vehiculos, pedidos, auditoria, perfil
+from models.database_models import Base, ClienteModel, ConductorModel, RolEnum, UsuarioModel, HistorialPedidoModel, PedidoModel, ProveedorModel
+from models.schemas import LoginRequest, RegistroCliente, RegistroConductor, RegistroProveedor, CambiarPassword, Token, FotoPerfil
+from routes import clientes, conductores, vehiculos, pedidos, auditoria, perfil, proveedores
 from routes.auth import (
     get_current_user,
     get_current_user_optional,
     registrar_cliente,
     registrar_conductor,
+    registrar_proveedor,
     cambiar_password,
 )
 
@@ -35,6 +36,7 @@ def _migrar_pedidos():
         "foto_entrega": "ALTER TABLE pedidos ADD COLUMN foto_entrega VARCHAR(255) NULL",
         "firma_entrega": "ALTER TABLE pedidos ADD COLUMN firma_entrega TEXT NULL",
         "entregado_at": "ALTER TABLE pedidos ADD COLUMN entregado_at DATETIME NULL",
+        "id_proveedor": "ALTER TABLE pedidos ADD COLUMN id_proveedor INTEGER NULL REFERENCES proveedores (id_proveedor)",
     }
     with engine.begin() as conn:
         for col, sql in alteraciones.items():
@@ -114,6 +116,10 @@ def _nombre_real(db: Session, user: UsuarioModel) -> str:
         cli = db.query(ClienteModel).filter(ClienteModel.id_cliente == user.id_ref).first()
         if cli:
             return cli.nombre
+    if user.rol == RolEnum.PROVEEDOR and user.id_ref:
+        prov = db.query(ProveedorModel).filter(ProveedorModel.id_proveedor == user.id_ref).first()
+        if prov:
+            return prov.nombre
     return user.username.capitalize()
 
 @app.post("/api/token", response_model=Token)
@@ -152,6 +158,15 @@ def registrar_conductor_route(registro: RegistroConductor, db: Session = Depends
     auditoria.registrar(
         db, resultado.get("username"), "CONDUCTOR_ALTAREGISTRO",
         f"Autoregistro de conductor {resultado.get('nombre')}",
+    )
+    return resultado
+
+@app.post("/registro-proveedor", status_code=status.HTTP_201_CREATED)
+def registrar_proveedor_route(registro: RegistroProveedor, db: Session = Depends(get_db)):
+    resultado = registrar_proveedor(registro, db)
+    auditoria.registrar(
+        db, resultado.get("username"), "PROVEEDOR_ALTAREGISTRO",
+        f"Autoregistro de proveedor {resultado.get('nombre')}",
     )
     return resultado
 
@@ -240,6 +255,44 @@ def eliminar_conductor_route(
 ):
     conductores.eliminar_conductor(id_conductor, db)
     auditoria.registrar(db, _user.username, "CONDUCTOR_ELIMINAR", f"Conductor {id_conductor}")
+
+# ==========================================
+# RUTAS DE PROVEEDORES
+# ==========================================
+
+@app.get("/proveedores")
+def get_proveedores_route(db: Session = Depends(get_db)):
+    return proveedores.get_proveedores(db)
+
+@app.post("/proveedores", status_code=status.HTTP_201_CREATED)
+def crear_proveedor_route(
+    proveedor: proveedores.ProveedorBase,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
+    resultado = proveedores.crear_proveedor(proveedor, db)
+    auditoria.registrar(db, _user.username, "PROVEEDOR_CREAR", f"Proveedor {resultado.id_proveedor}: {proveedor.nombre}")
+    return resultado
+
+@app.put("/proveedores/{id_proveedor}")
+def actualizar_proveedor_route(
+    id_proveedor: int,
+    prov_in: proveedores.ProveedorBase,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
+    resultado = proveedores.actualizar_proveedor(id_proveedor, prov_in, db)
+    auditoria.registrar(db, _user.username, "PROVEEDOR_EDITAR", f"Proveedor {id_proveedor}: {prov_in.nombre}")
+    return resultado
+
+@app.delete("/proveedores/{id_proveedor}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_proveedor_route(
+    id_proveedor: int,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
+    proveedores.eliminar_proveedor(id_proveedor, db)
+    auditoria.registrar(db, _user.username, "PROVEEDOR_ELIMINAR", f"Proveedor {id_proveedor}")
 
 # ==========================================
 # RUTAS DE VEHÍCULOS

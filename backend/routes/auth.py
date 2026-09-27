@@ -13,8 +13,8 @@ from config.security import (
     ALGORITHM,
     oauth2_scheme,
 )
-from models.database_models import ClienteModel, ConductorModel, RolEnum, UsuarioModel
-from models.schemas import LoginRequest, RegistroCliente, RegistroConductor, CambiarPassword, Token
+from models.database_models import ClienteModel, ConductorModel, RolEnum, UsuarioModel, ProveedorModel
+from models.schemas import LoginRequest, RegistroCliente, RegistroConductor, RegistroProveedor, CambiarPassword, Token
 
 def get_current_user_optional(token: Optional[str], db: Session) -> Optional[UsuarioModel]:
     if not token:
@@ -146,6 +146,55 @@ def registrar_conductor(registro: RegistroConductor, db: Session = Depends(get_d
         "id_conductor": nuevo_conductor.id_conductor,
         "username": nuevo_usuario.username,
         "nombre": nuevo_conductor.nombre,
+        "rol": nuevo_usuario.rol.value,
+    }
+
+def registrar_proveedor(registro: RegistroProveedor, db: Session = Depends(get_db)):
+    if db.query(UsuarioModel).filter(UsuarioModel.username == registro.username).first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El nombre de usuario ya está en uso",
+        )
+
+    if db.query(ProveedorModel).filter(ProveedorModel.email == registro.email).first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El correo ya está registrado",
+        )
+
+    nuevo_proveedor = ProveedorModel(
+        nombre=registro.nombre,
+        telefono=registro.telefono,
+        email=registro.email,
+        direccion=registro.direccion,
+    )
+    db.add(nuevo_proveedor)
+
+    try:
+        db.flush()
+
+        nuevo_usuario = UsuarioModel(
+            username=registro.username,
+            password_hash=get_password_hash(registro.password),
+            rol=RolEnum.PROVEEDOR,
+            id_ref=nuevo_proveedor.id_proveedor,
+        )
+        db.add(nuevo_usuario)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El usuario o el correo ya están registrados",
+        )
+
+    db.refresh(nuevo_proveedor)
+    db.refresh(nuevo_usuario)
+    return {
+        "id_usuario": nuevo_usuario.id_usuario,
+        "id_proveedor": nuevo_proveedor.id_proveedor,
+        "username": nuevo_usuario.username,
+        "nombre": nuevo_proveedor.nombre,
         "rol": nuevo_usuario.rol.value,
     }
 

@@ -43,9 +43,10 @@ export default function FormPedido({
     if (!clientesFetched.length) {
       api<Cliente[]>("/clientes").then(setClientesFetched).catch(() => {});
     }
-    if (!vehiculosFetched.length) {
+    if (vehiculos === undefined && !vehiculosFetched.length) {
       api<Vehiculo[]>("/vehiculos").then(setVehiculosFetched).catch(() => {});
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientesFetched.length, vehiculosFetched.length]);
 
   useEffect(() => {
@@ -203,21 +204,23 @@ export default function FormPedido({
             </div>
           )}
 
-          <div>
-            <label className={labelCls}>Vehículo</label>
-            <select
-              value={idVehiculo}
-              onChange={(e) => setIdVehiculo(Number(e.target.value))}
-              className={inputCls}
-            >
-              <option value={0}>— Sin asignar —</option>
-              {vehiculosFetched.map((v) => (
-                <option key={v.id_vehiculo} value={v.id_vehiculo}>
-                  {v.tipo} ({v.placa})
-                </option>
-              ))}
-            </select>
-          </div>
+          {(vehiculosFetched.length > 0 || idVehiculo) && (
+            <div>
+              <label className={labelCls}>Vehículo</label>
+              <select
+                value={idVehiculo}
+                onChange={(e) => setIdVehiculo(Number(e.target.value))}
+                className={inputCls}
+              >
+                <option value={0}>— Sin asignar —</option>
+                {vehiculosFetched.map((v) => (
+                  <option key={v.id_vehiculo} value={v.id_vehiculo}>
+                    {v.tipo} ({v.placa})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className={labelCls}>Dirección</label>

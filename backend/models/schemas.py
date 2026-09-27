@@ -33,6 +33,14 @@ class RegistroCliente(BaseModel):
     username: str
     password: str
 
+class RegistroProveedor(BaseModel):
+    nombre: str
+    telefono: str
+    email: str
+    direccion: Optional[str] = None
+    username: str
+    password: str
+
 class RegistroConductor(BaseModel):
     nombre: str
     licencia: str
@@ -71,6 +79,18 @@ class VehiculoResponse(VehiculoBase):
     class Config:
         from_attributes = True
 
+class ProveedorBase(BaseModel):
+    nombre: str
+    telefono: str
+    email: str
+    direccion: Optional[str] = None
+
+class ProveedorResponse(ProveedorBase):
+    id_proveedor: int
+
+    class Config:
+        from_attributes = True
+
 class PedidoCreate(BaseModel):
     id_cliente: int
     direccion: str
@@ -78,6 +98,7 @@ class PedidoCreate(BaseModel):
     longitud: float
     id_conductor: Optional[int] = None
     id_vehiculo: Optional[int] = None
+    id_proveedor: Optional[int] = None
     estado: Optional[EstadoPedidoEnum] = EstadoPedidoEnum.PENDIENTE
 
 class PedidoUpdateState(BaseModel):
@@ -91,6 +112,7 @@ class PedidoResponse(BaseModel):
     id_cliente: int
     id_conductor: Optional[int] = None
     id_vehiculo: Optional[int] = None
+    id_proveedor: Optional[int] = None
     direccion: str
     latitud: float
     longitud: float
@@ -103,6 +125,7 @@ class PedidoResponse(BaseModel):
     cliente: Optional[ClienteResponse] = None
     conductor: Optional[ConductorResponse] = None
     vehiculo: Optional[VehiculoResponse] = None
+    proveedor: Optional[ProveedorResponse] = None
     historial: Optional[List["HistorialResponse"]] = None
 
     class Config:

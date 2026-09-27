@@ -9,6 +9,7 @@ class RolEnum(str, enum.Enum):
     ADMIN = "ADMIN"
     CONDUCTOR = "CONDUCTOR"
     CLIENTE = "CLIENTE"
+    PROVEEDOR = "PROVEEDOR"
 
 class EstadoPedidoEnum(str, enum.Enum):
     PENDIENTE = "PENDIENTE"
@@ -61,6 +62,17 @@ class VehiculoModel(Base):
 
     pedidos = relationship("PedidoModel", back_populates="vehiculo")
 
+class ProveedorModel(Base):
+    __tablename__ = "proveedores"
+
+    id_proveedor = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(100), nullable=False)
+    telefono = Column(String(20), nullable=False)
+    email = Column(String(100), unique=True, nullable=False)
+    direccion = Column(Text, nullable=True)
+
+    pedidos = relationship("PedidoModel", back_populates="proveedor")
+
 class PedidoModel(Base):
     __tablename__ = "pedidos"
 
@@ -68,6 +80,7 @@ class PedidoModel(Base):
     id_cliente = Column(Integer, ForeignKey("clientes.id_cliente", ondelete="RESTRICT"), nullable=False)
     id_conductor = Column(Integer, ForeignKey("conductores.id_conductor", ondelete="SET NULL"), nullable=True)
     id_vehiculo = Column(Integer, ForeignKey("vehiculos.id_vehiculo", ondelete="SET NULL"), nullable=True)
+    id_proveedor = Column(Integer, ForeignKey("proveedores.id_proveedor", ondelete="SET NULL"), nullable=True)
     direccion = Column(Text, nullable=False)
     latitud = Column(Numeric(10, 8), nullable=False)
     longitud = Column(Numeric(11, 8), nullable=False)
@@ -81,6 +94,7 @@ class PedidoModel(Base):
     cliente = relationship("ClienteModel", back_populates="pedidos")
     conductor = relationship("ConductorModel", back_populates="pedidos")
     vehiculo = relationship("VehiculoModel", back_populates="pedidos")
+    proveedor = relationship("ProveedorModel", back_populates="pedidos")
     historial = relationship("HistorialPedidoModel", back_populates="pedido")
 
 class HistorialPedidoModel(Base):

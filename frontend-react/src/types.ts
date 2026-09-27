@@ -1,4 +1,4 @@
-export type Rol = "ADMIN" | "CONDUCTOR" | "CLIENTE";
+export type Rol = "ADMIN" | "CONDUCTOR" | "CLIENTE" | "PROVEEDOR";
 
 export interface Sesion {
   id_usuario: number;
@@ -35,6 +35,14 @@ export interface Vehiculo {
   capacidad: string;
 }
 
+export interface Proveedor {
+  id_proveedor: number;
+  nombre: string;
+  telefono: string;
+  email: string;
+  direccion?: string | null;
+}
+
 export type Estado =
   | "PENDIENTE"
   | "ASIGNADO"
@@ -48,6 +56,7 @@ export interface Pedido {
   id_cliente: number;
   id_conductor: number | null;
   id_vehiculo: number | null;
+  id_proveedor: number | null;
   direccion: string;
   latitud: number;
   longitud: number;
@@ -60,6 +69,7 @@ export interface Pedido {
   cliente?: { nombre: string } | null;
   conductor?: { nombre: string } | null;
   vehiculo?: { placa: string; tipo: string } | null;
+  proveedor?: { nombre: string } | null;
 }
 
 export interface Auditoria {

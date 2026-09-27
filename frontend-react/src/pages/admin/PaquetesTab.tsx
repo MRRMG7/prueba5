@@ -1,4 +1,4 @@
-import type { Cliente, Conductor, Pedido, Vehiculo } from "../../types";
+import type { Cliente, Conductor, Pedido, Proveedor, Vehiculo } from "../../types";
 import MapaTab from "./MapaTab";
 import PedidosTab from "./PedidosTab";
 
@@ -7,10 +7,11 @@ interface Props {
   clientes: Cliente[];
   conductores: Conductor[];
   vehiculos: Vehiculo[];
+  proveedores?: Proveedor[];
   onCambio: () => Promise<void>;
 }
 
-export default function PaquetesTab({ pedidos, clientes, conductores, vehiculos, onCambio }: Props) {
+export default function PaquetesTab({ pedidos, clientes, conductores, vehiculos, proveedores = [], onCambio }: Props) {
   return (
     <div className="grid gap-4">
       <MapaTab
@@ -20,7 +21,13 @@ export default function PaquetesTab({ pedidos, clientes, conductores, vehiculos,
         vehiculos={vehiculos}
         onCambio={onCambio}
       />
-      <PedidosTab pedidos={pedidos} clientes={clientes} conductores={conductores} onCambio={onCambio} />
+      <PedidosTab
+        pedidos={pedidos}
+        clientes={clientes}
+        conductores={conductores}
+        proveedores={proveedores}
+        onCambio={onCambio}
+      />
     </div>
   );
 }

@@ -46,6 +46,7 @@ export interface Proveedor {
 export type Estado =
   | "PENDIENTE"
   | "ASIGNADO"
+  | "RECOLECTADO"
   | "EN_CAMINO"
   | "ENTREGADO"
   | "INCIDENCIA"
@@ -61,6 +62,7 @@ export interface Pedido {
   latitud: number;
   longitud: number;
   estado: Estado;
+  codigo_recolecta?: string | null;
   incidencia_nota?: string | null;
   foto_entrega?: string | null;
   firma_entrega?: string | null;

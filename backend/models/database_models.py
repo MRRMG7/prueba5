@@ -14,6 +14,7 @@ class RolEnum(str, enum.Enum):
 class EstadoPedidoEnum(str, enum.Enum):
     PENDIENTE = "PENDIENTE"
     ASIGNADO = "ASIGNADO"
+    RECOLECTADO = "RECOLECTADO"
     EN_CAMINO = "EN_CAMINO"
     ENTREGADO = "ENTREGADO"
     INCIDENCIA = "INCIDENCIA"
@@ -85,6 +86,7 @@ class PedidoModel(Base):
     latitud = Column(Numeric(10, 8), nullable=False)
     longitud = Column(Numeric(11, 8), nullable=False)
     estado = Column(SQLEnum(EstadoPedidoEnum), default=EstadoPedidoEnum.PENDIENTE)
+    codigo_recolecta = Column(String(20), nullable=True)
     incidencia_nota = Column(Text, nullable=True)
     foto_entrega = Column(String(255), nullable=True)
     firma_entrega = Column(Text, nullable=True)

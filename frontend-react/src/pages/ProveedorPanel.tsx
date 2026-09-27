@@ -23,9 +23,9 @@ const [pedidos, setPedidos] = useState<Pedido[]>([]);
 
   async function cargar() {
     const [p, c, cond] = await Promise.all([
-      api<Pedido[]>("/pedidos"),
-      api<Cliente[]>("/clientes"),
-      api<Conductor[]>("/conductores"),
+      api<Pedido[]>("/api/pedidos").catch(() => [] as Pedido[]),
+      api<Cliente[]>("/clientes").catch(() => [] as Cliente[]),
+      api<Conductor[]>("/conductores").catch(() => [] as Conductor[]),
     ]);
     setPedidos(
       (p || []).map((x) => ({
@@ -73,7 +73,9 @@ const [pedidos, setPedidos] = useState<Pedido[]>([]);
   });
 
   const conteos = {
-    pendientes: pedidos.filter((p) => p.estado === "PENDIENTE" || p.estado === "ASIGNADO").length,
+    pendientes: pedidos.filter(
+      (p) => p.estado === "PENDIENTE" || p.estado === "ASIGNADO" || p.estado === "RECOLECTADO",
+    ).length,
     enCamino: pedidos.filter((p) => p.estado === "EN_CAMINO").length,
     entregados: pedidos.filter((p) => p.estado === "ENTREGADO").length,
     incidencias: pedidos.filter((p) => p.estado === "INCIDENCIA").length,
@@ -108,7 +110,7 @@ const [pedidos, setPedidos] = useState<Pedido[]>([]);
       <main className="conductor-cuerpo">
         <h1 className="conductor-saludo">Mis entregas</h1>
         <p className="conductor-saludo-sub">
-          Creá pedidos para tus clientes y seguí cada entrega con su evidencia.
+          Mandá el paquete de tus clientes y seguí cada envío. El administrador aprueba y asigna el conductor.
         </p>
 
         <div className="fila-conteos">
@@ -153,6 +155,16 @@ const [pedidos, setPedidos] = useState<Pedido[]>([]);
                   </div>
                   <p className="entrega-cliente">Cliente: {nombreCliente(p, clientes)}</p>
                   <p className="entrega-dir">{p.direccion}</p>
+                  {p.estado === "PENDIENTE" && (
+                    <p className="entrega-dir" style={{ fontStyle: "italic" }}>
+                      Esperando aprobación del administrador.
+                    </p>
+                  )}
+                  {p.codigo_recolecta && p.estado !== "PENDIENTE" && (
+                    <p className="entrega-dir">
+                      Código de recolecta: <span className="codigo-tracking">{p.codigo_recolecta}</span>
+                    </p>
+                  )}
                   <p className="entrega-dir">
                     {nombreConductor(p, conductores)}
                     {p.vehiculo ? ` · ${p.vehiculo.tipo} (${p.vehiculo.placa})` : ""}
@@ -182,7 +194,7 @@ const [pedidos, setPedidos] = useState<Pedido[]>([]);
 
       {modalNuevo && (
         <FormPedido
-          clientes={clientes}
+          datosCliente
           conductores={[]}
           vehiculos={[]}
           onCerrar={() => setModalNuevo(false)}

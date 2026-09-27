@@ -14,6 +14,7 @@ import MenuUsuario from "../components/MenuUsuario";
 const COLOR_ESTADOS: Record<string, string> = {
   PENDIENTE: "#64748b",
   ASIGNADO: "#334155",
+  RECOLECTADO: "#7c3aed",
   EN_CAMINO: "#f5a623",
   ENTREGADO: "#2ec4b6",
   INCIDENCIA: "#f36c2e",
@@ -54,8 +55,8 @@ export default function ConductorPanel() {
 
   async function cargar() {
     const [p, c] = await Promise.all([
-      api<Pedido[]>("/pedidos"),
-      api<Cliente[]>("/clientes"),
+      api<Pedido[]>("/api/pedidos").catch(() => [] as Pedido[]),
+      api<Cliente[]>("/clientes").catch(() => [] as Cliente[]),
     ]);
     setClientes(c || []);
     setPedidos(
@@ -92,9 +93,7 @@ export default function ConductorPanel() {
 
   const propios = sesion?.id_ref ? pedidos.filter((p) => p.id_conductor === sesion.id_ref) : [];
 
-  const pendientes = propios.filter(
-    (p) => p.estado === "ASIGNADO" || p.estado === "EN_CAMINO",
-  );
+      const pendientes = propios.filter((p) => p.estado === "EN_CAMINO");
 
   async function optimizarRuta() {
     const conCoords = pendientes.filter((p) => p.latitud && p.longitud);
@@ -198,11 +197,60 @@ export default function ConductorPanel() {
   }
 
   const conteos = {
-    porEntregar: propios.filter((p) => p.estado === "ASIGNADO").length,
+    porRecolectar: propios.filter((p) => p.estado === "ASIGNADO").length,
+    recolectados: propios.filter((p) => p.estado === "RECOLECTADO").length,
     enCamino: propios.filter((p) => p.estado === "EN_CAMINO").length,
     entregados: propios.filter((p) => p.estado === "ENTREGADO").length,
     incidencias: propios.filter((p) => p.estado === "INCIDENCIA").length,
   };
+
+  const porRecolectar = propios
+    .filter((p) => p.estado === "ASIGNADO")
+    .sort((a, b) => a.id_pedido - b.id_pedido);
+  const recolectados = propios
+    .filter((p) => p.estado === "RECOLECTADO")
+    .sort((a, b) => a.id_pedido - b.id_pedido);
+  const enRuta = propios.filter(
+    (p) => p.estado === "EN_CAMINO" || p.estado === "INCIDENCIA" || p.estado === "ENTREGADO",
+  );
+
+  const [codigo, setCodigo] = useState("");
+  const [recolectandoId, setRecolectandoId] = useState<number | null>(null);
+  const [msgRecolecta, setMsgRecolecta] = useState("");
+  const [enviandoId, setEnviandoId] = useState<number | null>(null);
+
+  async function recolectarPedido(p: Pedido) {
+    setMsgRecolecta("");
+    if (!codigo.trim()) {
+      setMsgRecolecta("Ingresá el código de recolecta.");
+      return;
+    }
+    setRecolectandoId(p.id_pedido);
+    try {
+      await api(`/pedidos/${p.id_pedido}/recolectar`, {
+        method: "POST",
+        body: JSON.stringify({ codigo: codigo.trim() }),
+      });
+      setCodigo("");
+      await cargar();
+    } catch (err) {
+      setMsgRecolecta(err instanceof Error ? err.message : "No se pudo recolectar");
+    } finally {
+      setRecolectandoId(null);
+    }
+  }
+
+  async function pasarAEntrega(p: Pedido) {
+    setEnviandoId(p.id_pedido);
+    try {
+      await api(`/pedidos/${p.id_pedido}/iniciar-entrega`, { method: "POST" });
+      await cargar();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "No se pudo iniciar la entrega");
+    } finally {
+      setEnviandoId(null);
+    }
+  }
 
   return (
     <div className="conductor">
@@ -237,7 +285,8 @@ export default function ConductorPanel() {
         </p>
 
         <div className="fila-conteos">
-          <TarjetaConteo valor={conteos.porEntregar} etiqueta="Por entregar" color="#334155" />
+          <TarjetaConteo valor={conteos.porRecolectar} etiqueta="Por recolectar" color="#334155" />
+          <TarjetaConteo valor={conteos.recolectados} etiqueta="Recolectados" color="#7c3aed" />
           <TarjetaConteo valor={conteos.enCamino} etiqueta="En camino" color="#f5a623" />
           <TarjetaConteo valor={conteos.entregados} etiqueta="Entregados" color="#2ec4b6" />
           <TarjetaConteo valor={conteos.incidencias} etiqueta="Incidencias" color="#f36c2e" />
@@ -252,6 +301,88 @@ export default function ConductorPanel() {
             <div className="mapa-wrap">
               <div ref={mapaCont} style={{ height: 260 }} />
             </div>
+          </div>
+        </section>
+
+        <section className="tarjeta">
+          <div className="cabecera-tarjeta">
+            <h2>Por recolectar</h2>
+            <p>Recolectá los paquetes en el comercio. Van en orden de llegada.</p>
+          </div>
+          <div className="cuerpo-tarjeta">
+            {porRecolectar.length === 0 && (
+              <p className="entrega-vacio">No tenés paquetes por recolectar.</p>
+            )}
+            {porRecolectar.map((p, i) => (
+              <div className="entrega-card" key={p.id_pedido}>
+                <div className="entrega-top">
+                  <span className="entrega-orden">{i + 1}</span>
+                  <EstadoPill estado={p.estado} />
+                </div>
+                <p className="entrega-cliente">{nombreCliente(p, clientes)}</p>
+                <p className="entrega-dir">{p.direccion}</p>
+                <div className="entrega-acciones">
+                  <p className="entrega-dir" style={{ margin: "0 0 6px" }}>
+                    Pedí el código de recolecta al comercio e ingresalo para confirmar.
+                  </p>
+                  <div className="fila-acciones" style={{ flexWrap: "wrap" }}>
+                    <input
+                      className="campo-auditoria"
+                      style={{ maxWidth: 160, marginBottom: 0 }}
+                      type="text"
+                      placeholder="Código R-####"
+                      value={codigo}
+                      onChange={(e) => setCodigo(e.target.value)}
+                    />
+                    <button
+                      className="btn btn-verde"
+                      onClick={() => recolectarPedido(p)}
+                      disabled={recolectandoId === p.id_pedido}
+                    >
+                      {recolectandoId === p.id_pedido ? "Validando…" : "Recolectar"}
+                    </button>
+                    <button
+                      className="btn btn-rojo"
+                      onClick={() => setModalEntrega({ pedido: p, modo: "incidencia" })}
+                    >
+                      Incidencia
+                    </button>
+                  </div>
+                  {msgRecolecta && <p className="error-login" style={{ marginTop: 6 }}>{msgRecolecta}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="tarjeta">
+          <div className="cabecera-tarjeta">
+            <h2>Paquetes recolectados</h2>
+            <p>Ya los tenés en tu poder. Pasalos a entrega cuando salgas a ruta.</p>
+          </div>
+          <div className="cuerpo-tarjeta">
+            {recolectados.length === 0 && (
+              <p className="entrega-vacio">Todavía no recolectaste ningún paquete.</p>
+            )}
+            {recolectados.map((p) => (
+              <div className="entrega-card" key={p.id_pedido}>
+                <div className="entrega-top">
+                  <span className="codigo-tracking">#{p.id_pedido}</span>
+                  <EstadoPill estado={p.estado} />
+                </div>
+                <p className="entrega-cliente">{nombreCliente(p, clientes)}</p>
+                <p className="entrega-dir">{p.direccion}</p>
+                <div className="entrega-acciones">
+                  <button
+                    className="btn btn-ambar"
+                    onClick={() => pasarAEntrega(p)}
+                    disabled={enviandoId === p.id_pedido}
+                  >
+                    {enviandoId === p.id_pedido ? "Enviando…" : "Pasar a entrega"}
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -289,12 +420,12 @@ export default function ConductorPanel() {
               <p className="aviso-banner ambar">Orden optimizado: {optimizado.length} entregas.</p>
             )}
 
-            {propios.length === 0 && (
+            {enRuta.length === 0 && (
               <p className="entrega-vacio">
-                No tenés entregas asignadas por el momento. El administrador te asignará pedidos.
+                No tenés entregas en ruta. Mové un paquete recolectado a "Pasar a entrega".
               </p>
             )}
-            {propios
+            {enRuta
               .slice()
               .sort((a, b) => {
                 if (!optimizado) return 0;
@@ -315,16 +446,6 @@ export default function ConductorPanel() {
                     <p className="entrega-cliente">{nombreCliente(p, clientes)}</p>
                     <p className="entrega-dir">{p.direccion}</p>
                     <div className="entrega-acciones">
-                      {p.estado === "ASIGNADO" && (
-                        <button
-                          className="btn btn-verde"
-                          onClick={() =>
-                            cambiarEstado(p, "EN_CAMINO", `¿Comenzar la entrega #${p.id_pedido}?`)
-                          }
-                        >
-                          Comenzar entrega
-                        </button>
-                      )}
                       {p.estado === "EN_CAMINO" && (
                         <>
                           <button

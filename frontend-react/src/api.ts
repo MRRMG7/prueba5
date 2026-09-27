@@ -10,6 +10,7 @@ export const ESTADO_META: Record<
 > = {
   PENDIENTE: { etiqueta: "Pendiente", color: "#64748b", fondo: "#f1f5f9" },
   ASIGNADO: { etiqueta: "Asignado", color: "#334155", fondo: "#eef0f3" },
+  RECOLECTADO: { etiqueta: "Recolectado", color: "#5b21b6", fondo: "rgba(124,58,237,.13)" },
   EN_CAMINO: { etiqueta: "En camino", color: "#9a6410", fondo: "rgba(245,166,35,.14)" },
   ENTREGADO: { etiqueta: "Entregado", color: "#0b8378", fondo: "rgba(46,196,182,.14)" },
   INCIDENCIA: { etiqueta: "Incidencia", color: "#c2410c", fondo: "rgba(243,108,44,.14)" },
@@ -67,6 +68,15 @@ export function nombreConductor(
   if (p.conductor?.nombre) return p.conductor.nombre;
   const c = conductores.find((x) => x.id_conductor === p.id_conductor);
   return c ? c.nombre : p.id_conductor ? `Conductor #${p.id_conductor}` : "Sin asignar";
+}
+
+export function nombreProveedor(
+  p: { id_proveedor: number | null; proveedor?: { nombre: string } | null },
+  proveedores: { id_proveedor: number; nombre: string }[],
+): string {
+  if (p.proveedor?.nombre) return p.proveedor.nombre;
+  const prov = proveedores.find((x) => x.id_proveedor === p.id_proveedor);
+  return prov ? prov.nombre : "—";
 }
 
 export function urlArchivo(nombre?: string | null): string {

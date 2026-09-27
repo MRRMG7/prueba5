@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-from config.database import get_db
+from config.database import get_db, SessionLocal
 from models.database_models import AuditoriaModel
 from models.schemas import AuditoriaResponse
 
@@ -12,14 +12,18 @@ def registrar(
     accion: str,
     detalle: Optional[str] = None,
 ) -> None:
-    db.add(
-        AuditoriaModel(
-            usuario=(usuario or "sistema")[:100],
-            accion=accion[:100],
-            detalle=detalle,
+    sesion = SessionLocal()
+    try:
+        sesion.add(
+            AuditoriaModel(
+                usuario=(usuario or "sistema")[:100],
+                accion=accion[:100],
+                detalle=detalle,
+            )
         )
-    )
-    db.commit()
+        sesion.commit()
+    finally:
+        sesion.close()
 
 def get_auditoria(
     db: Session = Depends(get_db),

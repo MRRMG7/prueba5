@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../auth";
 import { api } from "../../api";
-import type { Cliente, Conductor, Pedido, Vehiculo } from "../../types";
+import type { Cliente, Conductor, Pedido, Proveedor, Vehiculo } from "../../types";
 import PaquetesTab from "./PaquetesTab";
 import ConductoresTab from "./ConductoresTab";
 import VehiculosTab from "./VehiculosTab";
@@ -109,6 +109,7 @@ export default function AdminDashboard() {
   const [conductores, setConductores] = useState<Conductor[]>([]);
   const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  const [proveedores, setProveedores] = useState<Proveedor[]>([]);
 
   async function cambiarFoto(dataUrl: string | null) {
     const res = await api<{ foto: string | null }>("/usuario/foto", {
@@ -119,15 +120,17 @@ export default function AdminDashboard() {
   }
 
   async function cargar() {
-    const [c, cond, v, p] = await Promise.all([
+    const [c, cond, v, p, prov] = await Promise.all([
       api<Cliente[]>("/clientes"),
       api<Conductor[]>("/conductores"),
       api<Vehiculo[]>("/vehiculos"),
       api<Pedido[]>("/pedidos"),
+      api<Proveedor[]>("/proveedores").catch(() => [] as Proveedor[]),
     ]);
     setClientes(c || []);
     setConductores(cond || []);
     setVehiculos(v || []);
+    setProveedores(prov || []);
     setPedidos((p || []).map((x) => ({ ...x, latitud: Number(x.latitud || 0) })));
   }
 
@@ -280,6 +283,7 @@ export default function AdminDashboard() {
               clientes={clientes}
               conductores={conductores}
               vehiculos={vehiculos}
+              proveedores={proveedores}
               onCambio={cargar}
             />
           )}

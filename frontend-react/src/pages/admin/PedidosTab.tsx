@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { api, nombreCliente, urlArchivo } from "../../api";
-import type { Cliente, Conductor, Pedido } from "../../types";
+import { useEffect, useState } from "react";
+import { api, nombreCliente, nombreProveedor, urlArchivo } from "../../api";
+import type { Cliente, Conductor, Pedido, Proveedor, Vehiculo } from "../../types";
 import EstadoPill from "../../components/EstadoPill";
 import EvidenciaModal from "../../components/EvidenciaModal";
 import FormPedido from "./FormPedido";
@@ -9,13 +9,56 @@ interface Props {
   pedidos: Pedido[];
   clientes: Cliente[];
   conductores: Conductor[];
+  proveedores?: Proveedor[];
   onCambio: () => Promise<void>;
 }
 
-export default function PedidosTab({ pedidos, clientes, conductores, onCambio }: Props) {
+export default function PedidosTab({ pedidos, clientes, conductores, proveedores = [], onCambio }: Props) {
   const [editando, setEditando] = useState<Pedido | null>(null);
   const [evidencia, setEvidencia] = useState<string | null>(null);
+  const [aprobarEn, setAprobarEn] = useState<Pedido | null>(null);
+  const [conductorAprobar, setConductorAprobar] = useState(0);
+  const [vehiculoAprobar, setVehiculoAprobar] = useState(0);
+  const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
+  const [error, setError] = useState("");
+  const [guardando, setGuardando] = useState(false);
   const lista = [...pedidos].sort((a, b) => b.id_pedido - a.id_pedido);
+
+  useEffect(() => {
+    api<Vehiculo[]>("/vehiculos").then(setVehiculos).catch(() => {});
+  }, []);
+
+  function abrirAprobar(p: Pedido) {
+    setAprobarEn(p);
+    setConductorAprobar(p.id_conductor ?? 0);
+    setVehiculoAprobar(p.id_vehiculo ?? 0);
+    setError("");
+  }
+
+  async function confirmarAprobar() {
+    if (!aprobarEn) return;
+    if (!conductorAprobar) {
+      setError("Seleccioná un conductor.");
+      return;
+    }
+    setGuardando(true);
+    setError("");
+    try {
+      await api(`/pedidos/${aprobarEn.id_pedido}/aprobar`, {
+        method: "POST",
+        body: JSON.stringify({
+          id_conductor: conductorAprobar,
+          id_vehiculo: vehiculoAprobar || null,
+        }),
+      });
+      setAprobarEn(null);
+      await onCambio();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo aprobar el pedido.");
+    } finally {
+      setGuardando(false);
+    }
+  }
 
   async function reasignar(p: Pedido) {
     const opciones = conductores.map((c, i) => `${i + 1}) ${c.nombre}`).join("\n");
@@ -83,13 +126,15 @@ export default function PedidosTab({ pedidos, clientes, conductores, onCambio }:
           <table className="tabla">
             <thead>
               <tr>
-                <th>Nº seguimiento</th>
-                <th>Cliente</th>
-                <th>Dirección</th>
-                <th>Estado</th>
-                <th>Asignado a</th>
-                <th>Evidencia</th>
-                <th>Acciones</th>
+              <th>Nº seguimiento</th>
+              <th>Comercio</th>
+              <th>Cliente</th>
+              <th>Dirección</th>
+              <th>Estado</th>
+              <th>Código</th>
+              <th>Asignado a</th>
+              <th>Evidencia</th>
+              <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -105,10 +150,18 @@ export default function PedidosTab({ pedidos, clientes, conductores, onCambio }:
                   <td>
                     <span className="codigo-tracking">#{p.id_pedido}</span>
                   </td>
+                  <td className="celda-suave">{nombreProveedor(p, proveedores)}</td>
                   <td>{nombreCliente(p, clientes)}</td>
                   <td className="celda-suave">{p.direccion}</td>
                   <td>
                     <EstadoPill estado={p.estado} />
+                  </td>
+                  <td>
+                    {p.codigo_recolecta ? (
+                      <span className="codigo-tracking">{p.codigo_recolecta}</span>
+                    ) : (
+                      <span className="celda-suave">—</span>
+                    )}
                   </td>
                   <td>
                     <select
@@ -135,6 +188,11 @@ export default function PedidosTab({ pedidos, clientes, conductores, onCambio }:
                   </td>
                   <td>
                     <div className="fila-acciones">
+                      {p.estado === "PENDIENTE" && (
+                        <button onClick={() => abrirAprobar(p)} className="btn btn-verde">
+                          ✓ Aprobar
+                        </button>
+                      )}
                       <button onClick={() => setEditando(p)} className="btn">
                         ✎ Editar
                       </button>
@@ -167,6 +225,72 @@ export default function PedidosTab({ pedidos, clientes, conductores, onCambio }:
           titulo="Evidencia de entrega"
           onCerrar={() => setEvidencia(null)}
         />
+      )}
+
+      {aprobarEn && (
+        <div className="modal-fondo" onClick={() => setAprobarEn(null)}>
+          <div className="modal-caja" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-cabecera">
+              <div>
+                <h3 className="modal-titulo">Aprobar pedido #{aprobarEn.id_pedido}</h3>
+                <p className="modal-sub">
+                  Se genera el código de recolecta que ingressa el conductor al recoger el paquete.
+                </p>
+              </div>
+              <button type="button" className="modal-cerrar" onClick={() => setAprobarEn(null)}>
+                ✕
+              </button>
+            </div>
+            <div className="cuerpo-tarjeta">
+              <div className="form-grid-2">
+                <label className="campo">
+                  <span>Conductor</span>
+                  <select
+                    className="select-mini"
+                    value={conductorAprobar}
+                    onChange={(e) => setConductorAprobar(Number(e.target.value))}
+                  >
+                    <option value={0}>— Seleccionar —</option>
+                    {conductores.map((c) => (
+                      <option key={c.id_conductor} value={c.id_conductor}>
+                        {c.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="campo">
+                  <span>Vehículo</span>
+                  <select
+                    className="select-mini"
+                    value={vehiculoAprobar}
+                    onChange={(e) => setVehiculoAprobar(Number(e.target.value))}
+                  >
+                    <option value={0}>— Sin vehículo —</option>
+                    {vehiculos.map((v) => (
+                      <option key={v.id_vehiculo} value={v.id_vehiculo}>
+                        {v.tipo} ({v.placa})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              {error && <p className="error-login">{error}</p>}
+              <div className="fila-acciones" style={{ marginTop: 12 }}>
+                <button
+                  type="button"
+                  className="btn btn-verde"
+                  onClick={confirmarAprobar}
+                  disabled={guardando}
+                >
+                  {guardando ? "Aprobando…" : "Aprobar y asignar"}
+                </button>
+                <button type="button" className="btn" onClick={() => setAprobarEn(null)}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );

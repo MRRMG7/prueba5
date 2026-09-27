@@ -27,7 +27,6 @@ def get_current_user_optional(token: Optional[str], db: Session) -> Optional[Usu
         return db.query(UsuarioModel).filter(UsuarioModel.username == username).first()
     except JWTError:
         return None
-
 def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
@@ -37,6 +36,8 @@ def get_current_user(
         detail="No autenticado",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    if not token:
+        raise cred_error
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")

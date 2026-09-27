@@ -91,8 +91,15 @@ class ProveedorResponse(ProveedorBase):
     class Config:
         from_attributes = True
 
+class ClienteParaPedido(BaseModel):
+    nombre: str
+    telefono: str
+    email: Optional[str] = None
+    direccion: Optional[str] = None
+
 class PedidoCreate(BaseModel):
-    id_cliente: int
+    id_cliente: Optional[int] = None
+    cliente: Optional[ClienteParaPedido] = None
     direccion: str
     latitud: float
     longitud: float
@@ -107,6 +114,13 @@ class PedidoUpdateState(BaseModel):
     foto: Optional[str] = None
     firma: Optional[str] = None
 
+class AprobarPedido(BaseModel):
+    id_conductor: int
+    id_vehiculo: Optional[int] = None
+
+class RecolectarPedido(BaseModel):
+    codigo: str
+
 class PedidoResponse(BaseModel):
     id_pedido: int
     id_cliente: int
@@ -117,6 +131,7 @@ class PedidoResponse(BaseModel):
     latitud: float
     longitud: float
     estado: EstadoPedidoEnum
+    codigo_recolecta: Optional[str] = None
     incidencia_nota: Optional[str] = None
     foto_entrega: Optional[str] = None
     firma_entrega: Optional[str] = None

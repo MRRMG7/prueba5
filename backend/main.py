@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from config.database import get_db, engine
 from config.security import verify_password, create_access_token
 from models.database_models import Base, ClienteModel, ConductorModel, RolEnum, UsuarioModel, HistorialPedidoModel, PedidoModel, ProveedorModel
-from models.schemas import LoginRequest, RegistroCliente, RegistroConductor, RegistroProveedor, CambiarPassword, Token, FotoPerfil
+from models.schemas import LoginRequest, RegistroCliente, RegistroConductor, RegistroProveedor, CambiarPassword, Token, FotoPerfil, AprobarPedido, RecolectarPedido
 from routes import clientes, conductores, vehiculos, pedidos, auditoria, perfil, proveedores
 from routes.auth import (
     get_current_user,
@@ -37,6 +37,7 @@ def _migrar_pedidos():
         "firma_entrega": "ALTER TABLE pedidos ADD COLUMN firma_entrega TEXT NULL",
         "entregado_at": "ALTER TABLE pedidos ADD COLUMN entregado_at DATETIME NULL",
         "id_proveedor": "ALTER TABLE pedidos ADD COLUMN id_proveedor INTEGER NULL REFERENCES proveedores (id_proveedor)",
+        "codigo_recolecta": "ALTER TABLE pedidos ADD COLUMN codigo_recolecta VARCHAR(20) NULL",
     }
     with engine.begin() as conn:
         for col, sql in alteraciones.items():
@@ -95,6 +96,67 @@ def _migrar_rol_proveedor():
             conn.execute(text("ALTER TABLE usuarios_nueva RENAME TO usuarios"))
 
 _migrar_rol_proveedor()
+
+# Migración: agregar RECOLECTADO al ENUM de estado de pedidos y su historial
+_ESTADOS_PEDIDO = "'PENDIENTE','ASIGNADO','RECOLECTADO','EN_CAMINO','ENTREGADO','INCIDENCIA','CANCELADO'"
+
+def _migrar_estado_recolectado():
+    insp = sa_inspect(engine)
+    dialecto = engine.dialect.name
+    for tabla in ("pedidos", "historial_pedidos"):
+        if not insp.has_table(tabla):
+            continue
+        if dialecto in ("mysql", "mariadb"):
+            with engine.begin() as conn:
+                tipo = conn.execute(text(
+                    f"SELECT COLUMN_TYPE FROM information_schema.COLUMNS "
+                    f"WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '{tabla}' "
+                    f"AND COLUMN_NAME = 'estado'"
+                )).scalar()
+                if tipo and "RECOLECTADO" in tipo.upper():
+                    continue
+                conn.execute(text(f"ALTER TABLE {tabla} MODIFY estado ENUM({_ESTADOS_PEDIDO}) NOT NULL"))
+        elif dialecto == "sqlite":
+            with engine.begin() as conn:
+                ddl = conn.execute(text(
+                    f"SELECT sql FROM sqlite_master WHERE type='table' AND name='{tabla}'"
+                )).scalar()
+                if ddl and "RECOLECTADO" in ddl.upper():
+                    continue
+            columnas = insp.get_columns(tabla)
+            defs = []
+            for col in columnas:
+                nombre = col["name"]
+                if nombre == "estado":
+                    defs.append(
+                        "estado VARCHAR(16) NOT NULL CHECK (estado IN ('PENDIENTE','ASIGNADO',"
+                        "'RECOLECTADO','EN_CAMINO','ENTREGADO','INCIDENCIA','CANCELADO'))"
+                    )
+                else:
+                    tipo_col = str(col["type"])
+                    if tipo_col.upper().startswith("INTEGER"):
+                        tipo_col = "INTEGER"
+                    elif "VARCHAR" in tipo_col.upper():
+                        tipo_col = f"VARCHAR({col.get('length') or 255})"
+                    elif tipo_col.upper().startswith("NUMERIC") or "DECIMAL" in tipo_col.upper():
+                        tipo_col = "NUMERIC"
+                    else:
+                        tipo_col = "TEXT"
+                    defs.append(f'"{nombre}" {tipo_col}')
+            actuales = ", ".join(f'"{c["name"]}"' for c in columnas)
+            with engine.begin() as conn:
+                conn.execute(text("PRAGMA foreign_keys=OFF"))
+                conn.execute(text(
+                    f'CREATE TABLE "{tabla}_nueva" ({", ".join(defs)})'
+                ))
+                conn.execute(text(
+                    f'INSERT INTO "{tabla}_nueva" ({actuales}) SELECT {actuales} FROM "{tabla}"'
+                ))
+                conn.execute(text(f'DROP TABLE "{tabla}"'))
+                conn.execute(text(f'ALTER TABLE "{tabla}_nueva" RENAME TO "{tabla}"'))
+            insp = sa_inspect(engine)
+
+_migrar_estado_recolectado()
 
 app = FastAPI(
     title="API Sistema de Logística y Envíos",
@@ -390,6 +452,47 @@ def listar_pedidos_filtrados_route(
 ):
     return pedidos.listar_pedidos_filtrados(db, _user)
 
+@app.post("/pedidos/{id_pedido}/aprobar")
+def aprobar_pedido_route(
+    id_pedido: int,
+    aprobar_in: AprobarPedido,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
+    resultado = pedidos.aprobar_pedido(id_pedido, aprobar_in, db, _user)
+    auditoria.registrar(
+        db, _user.username, "PEDIDO_ESTADO",
+        f"Pedido {id_pedido} aprobado, conductor {aprobar_in.id_conductor}",
+    )
+    return resultado
+
+@app.post("/pedidos/{id_pedido}/recolectar")
+def recolectar_pedido_route(
+    id_pedido: int,
+    recolectar_in: RecolectarPedido,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
+    resultado = pedidos.recolectar_pedido(id_pedido, recolectar_in, db, _user)
+    auditoria.registrar(
+        db, _user.username, "PEDIDO_ESTADO",
+        f"Pedido {id_pedido} recolectado con código {resultado.codigo_recolecta}",
+    )
+    return resultado
+
+@app.post("/pedidos/{id_pedido}/iniciar-entrega")
+def iniciar_entrega_pedido_route(
+    id_pedido: int,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
+    resultado = pedidos.iniciar_entrega_pedido(id_pedido, db, _user)
+    auditoria.registrar(
+        db, _user.username, "PEDIDO_ESTADO",
+        f"Pedido {id_pedido} sale a entrega",
+    )
+    return resultado
+
 @app.post("/pedidos", status_code=status.HTTP_201_CREATED)
 def crear_pedido_route(
     pedido_in: pedidos.PedidoCreate,
@@ -397,9 +500,14 @@ def crear_pedido_route(
     _user=Depends(get_current_user),
 ):
     resultado = pedidos.crear_pedido(pedido_in, db, _user)
+    nombre_destino = (
+        pedido_in.cliente.nombre.strip()
+        if pedido_in.cliente and pedido_in.cliente.nombre
+        else resultado.id_cliente
+    )
     auditoria.registrar(
         db, _user.username, "PEDIDO_CREAR",
-        f"Pedido {resultado.id_pedido} para cliente {pedido_in.id_cliente} ({resultado.estado.value})",
+        f"Pedido {resultado.id_pedido} para cliente {nombre_destino} ({resultado.estado.value})",
     )
     return resultado
 

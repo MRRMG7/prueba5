@@ -13,6 +13,7 @@ interface Props {
   conductores?: Conductor[];
   vehiculos?: Vehiculo[];
   iniciales?: { latitud: number; longitud: number; direccion: string };
+  datosCliente?: boolean;
   onCerrar: () => void;
   onGuardado: () => Promise<void>;
 }
@@ -23,12 +24,16 @@ export default function FormPedido({
   conductores,
   vehiculos,
   iniciales,
+  datosCliente,
   onCerrar,
   onGuardado,
 }: Props) {
   const [clientesFetched, setClientesFetched] = useState<Cliente[]>(clientes ?? []);
   const [vehiculosFetched, setVehiculosFetched] = useState<Vehiculo[]>(vehiculos ?? []);
   const [idCliente, setIdCliente] = useState(pedido?.id_cliente ?? 0);
+  const [nombreCliente, setNombreCliente] = useState("");
+  const [telefonoCliente, setTelefonoCliente] = useState("");
+  const [emailCliente, setEmailCliente] = useState("");
   const [idConductor, setIdConductor] = useState(pedido?.id_conductor ?? 0);
   const [idVehiculo, setIdVehiculo] = useState(pedido?.id_vehiculo ?? 0);
   const [direccion, setDireccion] = useState(pedido?.direccion ?? iniciales?.direccion ?? "");
@@ -40,7 +45,7 @@ export default function FormPedido({
   const pinRef = useRef<maplibregl.Marker | null>(null);
 
   useEffect(() => {
-    if (!clientesFetched.length) {
+    if (!datosCliente && !clientesFetched.length) {
       api<Cliente[]>("/clientes").then(setClientesFetched).catch(() => {});
     }
     if (vehiculos === undefined && !vehiculosFetched.length) {
@@ -108,12 +113,18 @@ export default function FormPedido({
   async function enviar(e: FormEvent) {
     e.preventDefault();
     setError("");
-    if (!idCliente) return setError("Seleccioná un cliente.");
+    if (datosCliente) {
+      if (!nombreCliente.trim() || !telefonoCliente.trim()) {
+        return setError("Escribí el nombre y el teléfono de quien recibe el paquete.");
+      }
+    } else if (!idCliente) {
+      return setError("Seleccioná un cliente.");
+    }
     if (!direccion.trim()) return setError("Completá la dirección.");
     if (!latitud || !longitud) return setError("Las coordenadas son obligatorias.");
 
-    const cuerpo = {
-      id_cliente: Number(idCliente),
+    const cuerpo: Record<string, unknown> = {
+      id_cliente: datosCliente ? null : Number(idCliente),
       direccion: direccion.trim(),
       latitud: Number(latitud),
       longitud: Number(longitud),
@@ -121,6 +132,15 @@ export default function FormPedido({
       id_vehiculo: idVehiculo ? Number(idVehiculo) : null,
       estado: "PENDIENTE" as const,
     };
+
+    if (datosCliente) {
+      cuerpo.cliente = {
+        nombre: nombreCliente.trim(),
+        telefono: telefonoCliente.trim(),
+        email: emailCliente.trim(),
+        direccion: direccion.trim(),
+      };
+    }
 
     setGuardando(true);
     try {
@@ -170,21 +190,58 @@ export default function FormPedido({
         )}
 
         <div className="mt-4 space-y-4">
-          <div>
-            <label className={labelCls}>Cliente</label>
-            <select
-              value={idCliente}
-              onChange={(e) => setIdCliente(Number(e.target.value))}
-              className={inputCls}
-            >
-              <option value={0}>— Seleccionar —</option>
-              {clientesFetched.map((c) => (
-                <option key={c.id_cliente} value={c.id_cliente}>
-                  {c.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
+          {datosCliente ? (
+            <>
+              <p className="text-xs text-suave">
+                Escribí los datos de quien recibe el paquete. Si el cliente ya está registrado se reutiliza su ficha.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Nombre del cliente</label>
+                  <input
+                    value={nombreCliente}
+                    onChange={(e) => setNombreCliente(e.target.value)}
+                    className={inputCls}
+                    placeholder="Nombre y apellido"
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Teléfono</label>
+                  <input
+                    value={telefonoCliente}
+                    onChange={(e) => setTelefonoCliente(e.target.value)}
+                    className={inputCls}
+                    placeholder="7000-0000"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className={labelCls}>Correo (opcional)</label>
+                <input
+                  value={emailCliente}
+                  onChange={(e) => setEmailCliente(e.target.value)}
+                  className={inputCls}
+                  placeholder="correo@ejemplo.com"
+                />
+              </div>
+            </>
+          ) : (
+            <div>
+              <label className={labelCls}>Cliente</label>
+              <select
+                value={idCliente}
+                onChange={(e) => setIdCliente(Number(e.target.value))}
+                className={inputCls}
+              >
+                <option value={0}>— Seleccionar —</option>
+                {clientesFetched.map((c) => (
+                  <option key={c.id_cliente} value={c.id_cliente}>
+                    {c.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {(conductores || []).length > 0 && (
             <div>

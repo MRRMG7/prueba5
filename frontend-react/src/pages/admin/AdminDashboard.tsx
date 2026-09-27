@@ -6,6 +6,7 @@ import PaquetesTab from "./PaquetesTab";
 import ConductoresTab from "./ConductoresTab";
 import VehiculosTab from "./VehiculosTab";
 import ClientesTab from "./ClientesTab";
+import TarjetaConteo from "../../components/TarjetaConteo";
 
 type Seccion = "resumen" | "paquetes" | "conductores" | "vehiculos" | "clientes";
 
@@ -188,10 +189,12 @@ export default function AdminDashboard() {
             <>
               <div className="fila-conteos">
                 {Object.keys(conteos).map((k) => (
-                  <span className="contador" key={k}>
-                    <span className="punto" style={{ background: CONTEOS_COLORES[k] }} />
-                    {CONTEOS_LABEL[k]}: <b>{conteos[k as keyof typeof conteos]}</b>
-                  </span>
+                  <TarjetaConteo
+                    key={k}
+                    valor={conteos[k as keyof typeof conteos]}
+                    etiqueta={CONTEOS_LABEL[k]}
+                    color={CONTEOS_COLORES[k]}
+                  />
                 ))}
               </div>
 

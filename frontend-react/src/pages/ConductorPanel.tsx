@@ -6,6 +6,7 @@ import { ESTADO_META, api, nombreCliente } from "../api";
 import { ESTILO_MAPA } from "../mapa";
 import type { Cliente, Pedido } from "../types";
 import EstadoPill from "../components/EstadoPill";
+import TarjetaConteo from "../components/TarjetaConteo";
 
 const COLOR_ESTADOS: Record<string, string> = {
   PENDIENTE: "#64748b",
@@ -146,22 +147,10 @@ export default function ConductorPanel() {
         </p>
 
         <div className="fila-conteos">
-          <span className="contador">
-            <span className="punto" style={{ background: "#334155" }} />
-            Por entregar: <b>{conteos.porEntregar}</b>
-          </span>
-          <span className="contador">
-            <span className="punto" style={{ background: "#f5a623" }} />
-            En camino: <b>{conteos.enCamino}</b>
-          </span>
-          <span className="contador">
-            <span className="punto" style={{ background: "#2ec4b6" }} />
-            Entregados: <b>{conteos.entregados}</b>
-          </span>
-          <span className="contador">
-            <span className="punto" style={{ background: "#f36c2e" }} />
-            Incidencias: <b>{conteos.incidencias}</b>
-          </span>
+          <TarjetaConteo valor={conteos.porEntregar} etiqueta="Por entregar" color="#334155" />
+          <TarjetaConteo valor={conteos.enCamino} etiqueta="En camino" color="#f5a623" />
+          <TarjetaConteo valor={conteos.entregados} etiqueta="Entregados" color="#2ec4b6" />
+          <TarjetaConteo valor={conteos.incidencias} etiqueta="Incidencias" color="#f36c2e" />
         </div>
 
         <section className="tarjeta">

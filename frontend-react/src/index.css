@@ -749,21 +749,60 @@ input, select, textarea { font-family: inherit; }
 .cabecera-tarjeta p { margin-top: 4px; font-size: 13px; color: var(--tinta-500); }
 .cuerpo-tarjeta { padding: 0 24px 22px; }
 
-.fila-conteos { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; align-items: center; }
+.fila-conteos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
 
-.contador {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background: var(--papel-100);
+.conteo-tarjeta {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--superficie);
+  border: 1px solid var(--linea-borde);
+  border-radius: var(--radio-m);
+  padding: 12px 14px 12px;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.conteo-tarjeta::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--accio);
+  opacity: 0.9;
+}
+.conteo-tarjeta:hover {
+  transform: translateY(-2px);
+  border-color: var(--accio);
+  box-shadow: 0 6px 14px rgb(0 0 0 / 0.08);
+}
+.conteo-tarjeta .conteo-punto {
+  width: 10px;
+  height: 10px;
   border-radius: 999px;
-  padding: 8px 14px;
-  font-size: 13px;
+  background: var(--accio);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accio) 18%, transparent);
+  margin-bottom: 4px;
+}
+.conteo-tarjeta .conteo-numero {
+  font-family: var(--fuente-display);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--tinta-900);
+}
+.conteo-tarjeta .conteo-etiqueta {
+  font-size: 12px;
   font-weight: 500;
   color: var(--tinta-500);
 }
-.contador .punto { width: 9px; height: 9px; border-radius: 999px; display: inline-block; }
-.contador b { font-family: var(--fuente-display); font-size: 15px; color: var(--tinta-900); }
 
 .overflow { overflow-x: auto; }
 
@@ -925,6 +964,6 @@ input, select, textarea { font-family: inherit; }
   .cabecera-tarjeta { padding: 16px 16px 10px; }
   .cuerpo-tarjeta { padding: 0 16px 18px; }
   .panel-top { gap: 10px; }
-  .fila-conteos { gap: 6px; }
+  .fila-conteos { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
   .buscar-form input, .buscar-form .btn, .campo input { font-size: 16px; }
 }

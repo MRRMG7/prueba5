@@ -9,6 +9,7 @@ import EstadoPill from "../components/EstadoPill";
 import TarjetaConteo from "../components/TarjetaConteo";
 import EntregaModal from "../components/EntregaModal";
 import CambiarPasswordModal from "../components/CambiarPasswordModal";
+import MenuUsuario from "../components/MenuUsuario";
 
 const COLOR_ESTADOS: Record<string, string> = {
   PENDIENTE: "#64748b",
@@ -137,13 +138,13 @@ export default function ConductorPanel() {
           <span className="marca-texto">Transporte &amp; Entregas</span>
         </div>
         <div className="conductor-usuario">
-          <span>{sesion?.nombre}</span>
-          <button type="button" className="conductor-btn-salir" onClick={() => setModalPassword(true)}>
-            Cambiar clave
-          </button>
-          <button type="button" className="conductor-btn-salir" onClick={logout}>
-            Salir
-          </button>
+          <MenuUsuario
+            nombre={sesion?.nombre}
+            usuario={sesion?.usuario}
+            rol="Conductor"
+            onCambiarPassword={() => setModalPassword(true)}
+            onCerrarSesion={logout}
+          />
         </div>
       </header>
 

@@ -546,6 +546,91 @@ input, select, textarea { font-family: inherit; }
 
 .conductor-btn-salir:hover { background: rgba(255, 255, 255, 0.12); }
 
+.conductor-usuario .menu-usuario { margin-left: 4px; }
+
+.menu-usuario { position: relative; display: inline-block; }
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.avatar:hover { transform: scale(1.06); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); }
+
+.menu-desplegable {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 240px;
+  background: #fff;
+  border: 1px solid var(--linea-borde);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.16);
+  padding: 8px;
+  z-index: 60;
+  animation: aparecer-menu .14s ease-out;
+}
+
+@keyframes aparecer-menu {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.menu-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px 10px;
+}
+
+.menu-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.menu-datos { min-width: 0; }
+.menu-nombre { font-size: 14px; font-weight: 600; color: var(--noche-900); }
+.menu-usuario-linea { font-size: 12px; color: #7c8ba0; margin-top: 2px; }
+
+.menu-separador { height: 1px; background: var(--linea-borde); margin: 4px 0 6px; }
+
+.menu-item {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--noche-900);
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .12s;
+}
+
+.menu-item:hover { background: var(--papel-suave); }
+.menu-item.danger { color: #c23333; }
+.menu-item.danger:hover { background: rgba(239, 75, 75, .08); }
+
+.panel-top-der { margin-left: auto; display: flex; align-items: center; }
+
 .conductor-cuerpo { max-width: 920px; margin: 0 auto; padding: 28px 20px 56px; }
 
 .conductor-saludo { font-size: 22px; font-weight: 600; color: var(--tinta-900); }

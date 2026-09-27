@@ -8,6 +8,7 @@ import VehiculosTab from "./VehiculosTab";
 import ClientesTab from "./ClientesTab";
 import TarjetaConteo from "../../components/TarjetaConteo";
 import CambiarPasswordModal from "../../components/CambiarPasswordModal";
+import MenuUsuario from "../../components/MenuUsuario";
 
 type Seccion = "resumen" | "paquetes" | "conductores" | "vehiculos" | "clientes";
 
@@ -171,12 +172,6 @@ export default function AdminDashboard() {
             <br />
             Administrador · @{sesion.usuario}
           </p>
-          <button className="salir-side" onClick={() => setModalPassword(true)}>
-            Cambiar clave
-          </button>
-          <button className="salir-side" onClick={logout}>
-            Cerrar sesión
-          </button>
         </div>
       </aside>
 
@@ -185,9 +180,15 @@ export default function AdminDashboard() {
           <div className="panel-top">
             <span className="rol-etiqueta">Administrador</span>
             <h1 className="panel-titulo">{TITULOS[seccion]}</h1>
-            <button className="btn salir" onClick={logout}>
-              Salir
-            </button>
+            <div className="panel-top-der">
+              <MenuUsuario
+                nombre={sesion.nombre}
+                usuario={sesion.usuario}
+                rol="Administrador"
+                onCambiarPassword={() => setModalPassword(true)}
+                onCerrarSesion={logout}
+              />
+            </div>
           </div>
 
           {seccion === "resumen" && (

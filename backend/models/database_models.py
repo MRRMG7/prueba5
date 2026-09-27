@@ -26,6 +26,7 @@ class UsuarioModel(Base):
     password_hash = Column(String(255), nullable=False)
     rol = Column(SQLEnum(RolEnum), nullable=False)
     id_ref = Column(Integer, nullable=True)
+    foto = Column(String(255), nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
 class ClienteModel(Base):
@@ -95,3 +96,12 @@ class HistorialPedidoModel(Base):
     usuario = Column(String(100), nullable=True)
 
     pedido = relationship("PedidoModel", back_populates="historial")
+
+class AuditoriaModel(Base):
+    __tablename__ = "auditoria"
+
+    id_auditoria = Column(Integer, primary_key=True, index=True)
+    usuario = Column(String(100), nullable=False)
+    accion = Column(String(100), nullable=False)
+    detalle = Column(Text, nullable=True)
+    fecha = Column(DateTime, server_default=func.now())

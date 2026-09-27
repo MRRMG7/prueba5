@@ -7,6 +7,7 @@ interface AuthCtx {
   sesion: Sesion | null;
   login: (usuario: string, password: string) => Promise<Sesion>;
   logout: () => void;
+  setFoto: (foto: string | null) => void;
 }
 
 const Ctx = createContext<AuthCtx>({
@@ -15,6 +16,7 @@ const Ctx = createContext<AuthCtx>({
     throw new Error("Auth no listo");
   },
   logout: () => {},
+  setFoto: () => {},
 });
 
 function leerStored(): Sesion | null {
@@ -44,7 +46,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSesion(null);
   }, []);
 
-  const valor = useMemo(() => ({ sesion, login, logout }), [sesion, login, logout]);
+  const setFoto = useCallback((foto: string | null) => {
+    setSesion((prev) => {
+      if (!prev) return prev;
+      const nueva = { ...prev, foto };
+      try {
+        localStorage.setItem(CLAVE_SESION, JSON.stringify(nueva));
+      } catch {
+        /* localStorage no disponible */
+      }
+      return nueva;
+    });
+  }, []);
+
+  const valor = useMemo(
+    () => ({ sesion, login, logout, setFoto }),
+    [sesion, login, logout, setFoto],
+  );
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;
 }
 

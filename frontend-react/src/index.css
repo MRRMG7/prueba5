@@ -567,6 +567,10 @@ input, select, textarea { font-family: inherit; }
 
 .avatar:hover { transform: scale(1.06); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); }
 
+.avatar-con-foto { border: 2px solid #fff; overflow: hidden; padding: 0; }
+.avatar-con-foto img,
+.menu-avatar.avatar-con-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
 .menu-desplegable {
   position: absolute;
   top: calc(100% + 8px);
@@ -1338,4 +1342,112 @@ input, select, textarea { font-family: inherit; }
   justify-content: center;
   margin-top: 10px;
   text-decoration: none;
+}
+
+/* =========================================================
+   GRÁFICOS DEL RESUMEN ADMIN
+   ========================================================= */
+.fila-graficos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.grafico-tarjeta { margin-bottom: 0; }
+.grafico-barras {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 170px;
+}
+.grafico-barra-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  height: 100%;
+  min-width: 0;
+}
+.grafico-barra-num { font-size: 12px; font-weight: 600; color: var(--tinta-700); }
+.grafico-barra {
+  width: 100%;
+  max-width: 42px;
+  min-height: 4px;
+  background: linear-gradient(180deg, var(--teal), #187e76);
+  border-radius: 6px 6px 2px 2px;
+  transition: height .3s ease;
+}
+.grafico-barra-etiqueta {
+  font-size: 11px;
+  text-transform: capitalize;
+  color: var(--tinta-500);
+}
+.grafico-metrica {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 4px 6px;
+}
+.grafico-metrica-valor {
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--teal);
+  line-height: 1;
+}
+.grafico-metrica-sub { font-size: 13px; color: var(--tinta-500); }
+
+/* =========================================================
+   OPTIMIZACIÓN DE RUTAS (conductor)
+   ========================================================= */
+.ruta-toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.entrega-orden {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--teal);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  flex: none;
+}
+
+/* =========================================================
+   AUDITORÍA (admin)
+   ========================================================= */
+.campo-auditoria {
+  width: 100%;
+  border: 1px solid var(--linea-borde);
+  border-radius: var(--radio-s);
+  padding: 11px 13px;
+  font-size: 14px;
+  margin-bottom: 14px;
+  background: var(--papel-000);
+  color: var(--tinta-900);
+}
+.pill-accion {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   RESPONSIVE AVATAR EN PANEL TOP
+   ========================================================= */
+@media (max-width: 640px) {
+  .menu-desplegable { right: -24px; }
+}
+@media (max-width: 480px) {
+  .fila-graficos { grid-template-columns: 1fr; }
 }

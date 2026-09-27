@@ -45,6 +45,9 @@ class CambiarPassword(BaseModel):
     password_actual: str
     password_nueva: str
 
+class FotoPerfil(BaseModel):
+    foto: Optional[str] = None
+
 class ConductorBase(BaseModel):
     nombre: str
     licencia: str
@@ -96,6 +99,7 @@ class PedidoResponse(BaseModel):
     foto_entrega: Optional[str] = None
     firma_entrega: Optional[str] = None
     entregado_at: Optional[datetime] = None
+    created_at: Optional[datetime] = None
     cliente: Optional[ClienteResponse] = None
     conductor: Optional[ConductorResponse] = None
     vehiculo: Optional[VehiculoResponse] = None
@@ -113,6 +117,16 @@ class HistorialResponse(BaseModel):
     foto: Optional[str] = None
     firma: Optional[str] = None
     usuario: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class AuditoriaResponse(BaseModel):
+    id_auditoria: int
+    usuario: str
+    accion: str
+    detalle: Optional[str] = None
+    fecha: Optional[datetime] = None
 
     class Config:
         from_attributes = True

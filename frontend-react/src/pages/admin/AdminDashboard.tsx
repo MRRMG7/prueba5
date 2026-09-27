@@ -9,8 +9,10 @@ import ClientesTab from "./ClientesTab";
 import TarjetaConteo from "../../components/TarjetaConteo";
 import CambiarPasswordModal from "../../components/CambiarPasswordModal";
 import MenuUsuario from "../../components/MenuUsuario";
+import GraficosResumen from "./GraficosResumen";
+import AuditoriaTab from "./AuditoriaTab";
 
-type Seccion = "resumen" | "paquetes" | "conductores" | "vehiculos" | "clientes";
+type Seccion = "resumen" | "paquetes" | "conductores" | "vehiculos" | "clientes" | "auditoria";
 
 const CONTEOS_COLORES: Record<string, string> = {
   PENDIENTE: "#64748b",
@@ -38,6 +40,7 @@ const TITULOS: Record<Seccion, string> = {
   conductores: "Conductores",
   vehiculos: "Vehículos",
   clientes: "Clientes",
+  auditoria: "Auditoría",
 };
 
 function Icono({ id }: { id: Seccion }) {
@@ -86,17 +89,34 @@ function Icono({ id }: { id: Seccion }) {
           <path d="M16 3.13a4 4 0 0 1 0 7.75" />
         </svg>
       );
+    case "auditoria":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...comunes}>
+          <path d="M12 8v4l3 3" />
+          <circle cx="12" cy="12" r="9" />
+          <path d="M8 3.5V2" />
+          <path d="M16 3.5V2" />
+        </svg>
+      );
   }
 }
 
 export default function AdminDashboard() {
-  const { sesion, logout } = useAuth();
+  const { sesion, logout, setFoto } = useAuth();
   const [seccion, setSeccion] = useState<Seccion>("resumen");
   const [modalPassword, setModalPassword] = useState(false);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [conductores, setConductores] = useState<Conductor[]>([]);
   const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
+
+  async function cambiarFoto(dataUrl: string | null) {
+    const res = await api<{ foto: string | null }>("/usuario/foto", {
+      method: "POST",
+      body: JSON.stringify({ foto: dataUrl }),
+    });
+    setFoto(res.foto);
+  }
 
   async function cargar() {
     const [c, cond, v, p] = await Promise.all([
@@ -137,6 +157,7 @@ export default function AdminDashboard() {
     { id: "conductores", label: "Conductores" },
     { id: "vehiculos", label: "Vehículos" },
     { id: "clientes", label: "Clientes" },
+    { id: "auditoria", label: "Auditoría" },
   ];
 
   return (
@@ -185,6 +206,8 @@ export default function AdminDashboard() {
                 nombre={sesion.nombre}
                 usuario={sesion.usuario}
                 rol="Administrador"
+                foto={sesion.foto}
+                onCambiarFoto={cambiarFoto}
                 onCambiarPassword={() => setModalPassword(true)}
                 onCerrarSesion={logout}
               />
@@ -203,6 +226,8 @@ export default function AdminDashboard() {
                   />
                 ))}
               </div>
+
+              <GraficosResumen pedidos={pedidos} />
 
               <section className="tarjeta">
                 <div className="cabecera-tarjeta">
@@ -261,6 +286,7 @@ export default function AdminDashboard() {
           {seccion === "conductores" && <ConductoresTab conductores={conductores} onCambio={cargar} />}
           {seccion === "vehiculos" && <VehiculosTab vehiculos={vehiculos} onCambio={cargar} />}
           {seccion === "clientes" && <ClientesTab clientes={clientes} pedidos={pedidos} onCambio={cargar} />}
+          {seccion === "auditoria" && <AuditoriaTab />}
         </div>
       </main>
 

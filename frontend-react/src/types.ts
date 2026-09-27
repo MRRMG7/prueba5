@@ -6,6 +6,7 @@ export interface Sesion {
   nombre: string;
   rol: Rol;
   id_ref: number | null;
+  foto?: string | null;
   access_token?: string;
 }
 
@@ -55,9 +56,18 @@ export interface Pedido {
   foto_entrega?: string | null;
   firma_entrega?: string | null;
   entregado_at?: string | null;
+  created_at?: string | null;
   cliente?: { nombre: string } | null;
   conductor?: { nombre: string } | null;
   vehiculo?: { placa: string; tipo: string } | null;
+}
+
+export interface Auditoria {
+  id_auditoria: number;
+  usuario: string;
+  accion: string;
+  detalle?: string | null;
+  fecha?: string | null;
 }
 
 export interface HistorialEntrega {

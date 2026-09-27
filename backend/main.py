@@ -11,8 +11,8 @@ from sqlalchemy.orm import Session
 from config.database import get_db, engine
 from config.security import verify_password, create_access_token
 from models.database_models import Base, ClienteModel, ConductorModel, RolEnum, UsuarioModel, HistorialPedidoModel, PedidoModel
-from models.schemas import LoginRequest, RegistroCliente, RegistroConductor, CambiarPassword, Token
-from routes import clientes, conductores, vehiculos, pedidos
+from models.schemas import LoginRequest, RegistroCliente, RegistroConductor, CambiarPassword, Token, FotoPerfil
+from routes import clientes, conductores, vehiculos, pedidos, auditoria, perfil
 from routes.auth import (
     get_current_user,
     get_current_user_optional,
@@ -42,6 +42,18 @@ def _migrar_pedidos():
                 conn.execute(text(sql))
 
 _migrar_pedidos()
+
+# Migraciones ligeras: foto de perfil en usuarios
+def _migrar_usuarios():
+    insp = sa_inspect(engine)
+    if not insp.has_table("usuarios"):
+        return
+    cols = {c["name"] for c in insp.get_columns("usuarios")}
+    with engine.begin() as conn:
+        if "foto" not in cols:
+            conn.execute(text("ALTER TABLE usuarios ADD COLUMN foto VARCHAR(255) NULL"))
+
+_migrar_usuarios()
 
 app = FastAPI(
     title="API Sistema de Logística y Envíos",
@@ -82,12 +94,14 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
         )
 
     access_token = create_access_token(data={"sub": user.username, "rol": user.rol.value})
+    auditoria.registrar(db, user.username, "LOGIN", "Inicio de sesión")
     return {
         "id_usuario": user.id_usuario,
         "usuario": user.username,
         "nombre": _nombre_real(db, user),
         "rol": user.rol.value,
         "id_ref": user.id_ref,
+        "foto": user.foto,
         "access_token": access_token,
     }
 
@@ -125,11 +139,21 @@ def login_for_access_token(
 
 @app.post("/registro", status_code=status.HTTP_201_CREATED)
 def registrar_cliente_route(registro: RegistroCliente, db: Session = Depends(get_db)):
-    return registrar_cliente(registro, db)
+    resultado = registrar_cliente(registro, db)
+    auditoria.registrar(
+        db, resultado.get("username"), "CLIENTE_AUTOREGISTRO",
+        f"Registro de cliente {resultado.get('email')}",
+    )
+    return resultado
 
 @app.post("/registro-conductor", status_code=status.HTTP_201_CREATED)
 def registrar_conductor_route(registro: RegistroConductor, db: Session = Depends(get_db)):
-    return registrar_conductor(registro, db)
+    resultado = registrar_conductor(registro, db)
+    auditoria.registrar(
+        db, resultado.get("username"), "CONDUCTOR_ALTAREGISTRO",
+        f"Autoregistro de conductor {resultado.get('nombre')}",
+    )
+    return resultado
 
 @app.post("/cambiar-password")
 def cambiar_password_route(
@@ -137,7 +161,9 @@ def cambiar_password_route(
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
 ):
-    return cambiar_password(body, db, _user)
+    resultado = cambiar_password(body, db, _user)
+    auditoria.registrar(db, _user.username, "CONTRASENA_CAMBIAR", "Cambió su contraseña")
+    return resultado
 
 # ==========================================
 # RUTAS DE CLIENTES
@@ -153,7 +179,9 @@ def crear_cliente_route(
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
 ):
-    return clientes.crear_cliente(cliente, db)
+    resultado = clientes.crear_cliente(cliente, db)
+    auditoria.registrar(db, _user.username, "CLIENTE_CREAR", f"Cliente {resultado.id_cliente}: {cliente.nombre}")
+    return resultado
 
 @app.put("/clientes/{id_cliente}")
 def actualizar_cliente_route(
@@ -162,7 +190,9 @@ def actualizar_cliente_route(
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
 ):
-    return clientes.actualizar_cliente(id_cliente, cliente_in, db)
+    resultado = clientes.actualizar_cliente(id_cliente, cliente_in, db)
+    auditoria.registrar(db, _user.username, "CLIENTE_EDITAR", f"Cliente {id_cliente}: {cliente_in.nombre}")
+    return resultado
 
 @app.delete("/clientes/{id_cliente}", status_code=status.HTTP_204_NO_CONTENT)
 def eliminar_cliente_route(
@@ -170,7 +200,8 @@ def eliminar_cliente_route(
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
 ):
-    return clientes.eliminar_cliente(id_cliente, db)
+    clientes.eliminar_cliente(id_cliente, db)
+    auditoria.registrar(db, _user.username, "CLIENTE_ELIMINAR", f"Cliente {id_cliente}")
 
 # ==========================================
 # RUTAS DE CONDUCTORES
@@ -186,7 +217,9 @@ def crear_conductor_route(
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
 ):
-    return conductores.crear_conductor(conductor, db)
+    resultado = conductores.crear_conductor(conductor, db)
+    auditoria.registrar(db, _user.username, "CONDUCTOR_CREAR", f"Conductor {resultado['id_conductor']}: {conductor.nombre} (user {resultado.get('username')})")
+    return resultado
 
 @app.put("/conductores/{id_conductor}")
 def actualizar_conductor_route(
@@ -195,7 +228,9 @@ def actualizar_conductor_route(
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
 ):
-    return conductores.actualizar_conductor(id_conductor, cond_in, db)
+    resultado = conductores.actualizar_conductor(id_conductor, cond_in, db)
+    auditoria.registrar(db, _user.username, "CONDUCTOR_EDITAR", f"Conductor {id_conductor}: {cond_in.nombre}")
+    return resultado
 
 @app.delete("/conductores/{id_conductor}", status_code=status.HTTP_204_NO_CONTENT)
 def eliminar_conductor_route(
@@ -203,7 +238,8 @@ def eliminar_conductor_route(
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
 ):
-    return conductores.eliminar_conductor(id_conductor, db)
+    conductores.eliminar_conductor(id_conductor, db)
+    auditoria.registrar(db, _user.username, "CONDUCTOR_ELIMINAR", f"Conductor {id_conductor}")
 
 # ==========================================
 # RUTAS DE VEHÍCULOS
@@ -219,7 +255,9 @@ def crear_vehiculo_route(
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
 ):
-    return vehiculos.crear_vehiculo(vehiculo, db)
+    resultado = vehiculos.crear_vehiculo(vehiculo, db)
+    auditoria.registrar(db, _user.username, "VEHICULO_CREAR", f"Vehículo {resultado.id_vehiculo}: {vehiculo.placa}")
+    return resultado
 
 @app.put("/vehiculos/{id_vehiculo}")
 def actualizar_vehiculo_route(
@@ -228,7 +266,9 @@ def actualizar_vehiculo_route(
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
 ):
-    return vehiculos.actualizar_vehiculo(id_vehiculo, veh_in, db)
+    resultado = vehiculos.actualizar_vehiculo(id_vehiculo, veh_in, db)
+    auditoria.registrar(db, _user.username, "VEHICULO_EDITAR", f"Vehículo {id_vehiculo}: {veh_in.placa}")
+    return resultado
 
 @app.delete("/vehiculos/{id_vehiculo}", status_code=status.HTTP_204_NO_CONTENT)
 def eliminar_vehiculo_route(
@@ -236,7 +276,8 @@ def eliminar_vehiculo_route(
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
 ):
-    return vehiculos.eliminar_vehiculo(id_vehiculo, db)
+    vehiculos.eliminar_vehiculo(id_vehiculo, db)
+    auditoria.registrar(db, _user.username, "VEHICULO_ELIMINAR", f"Vehículo {id_vehiculo}")
 
 # ==========================================
 # RUTAS DE PEDIDOS
@@ -263,7 +304,12 @@ def crear_pedido_route(
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
 ):
-    return pedidos.crear_pedido(pedido_in, db, _user)
+    resultado = pedidos.crear_pedido(pedido_in, db, _user)
+    auditoria.registrar(
+        db, _user.username, "PEDIDO_CREAR",
+        f"Pedido {resultado.id_pedido} para cliente {pedido_in.id_cliente} ({resultado.estado.value})",
+    )
+    return resultado
 
 @app.put("/pedidos/{id_pedido}")
 def actualizar_pedido_completo_route(
@@ -272,7 +318,12 @@ def actualizar_pedido_completo_route(
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
 ):
-    return pedidos.actualizar_pedido_completo(id_pedido, pedido_in, db, _user)
+    resultado = pedidos.actualizar_pedido_completo(id_pedido, pedido_in, db, _user)
+    auditoria.registrar(
+        db, _user.username, "PEDIDO_EDITAR",
+        f"Pedido {id_pedido} → {resultado.estado.value}, conductor {pedido_in.id_conductor}, vehículo {pedido_in.id_vehiculo}",
+    )
+    return resultado
 
 @app.put("/pedidos/{id_pedido}/estado")
 def actualizar_estado_pedido_route(
@@ -281,7 +332,13 @@ def actualizar_estado_pedido_route(
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
 ):
-    return pedidos.actualizar_estado_pedido(id_pedido, estado_in, db, _user)
+    resultado = pedidos.actualizar_estado_pedido(id_pedido, estado_in, db, _user)
+    auditoria.registrar(
+        db, _user.username, "PEDIDO_ESTADO",
+        f"Pedido {id_pedido} → {estado_in.estado.value}"
+        + (f" · {estado_in.nota[:80]}" if estado_in.nota else ""),
+    )
+    return resultado
 
 @app.delete("/pedidos/{id_pedido}", status_code=status.HTTP_204_NO_CONTENT)
 def eliminar_pedido_route(
@@ -289,7 +346,38 @@ def eliminar_pedido_route(
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
 ):
-    return pedidos.eliminar_pedido(id_pedido, db)
+    pedidos.eliminar_pedido(id_pedido, db)
+    auditoria.registrar(db, _user.username, "PEDIDO_ELIMINAR", f"Pedido {id_pedido}")
+
+# ==========================================
+# RUTAS DE AUDITORÍA Y PERFIL
+# ==========================================
+
+@app.get("/auditoria")
+def get_auditoria_route(
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+    limite: int = 200,
+):
+    if _user.rol != RolEnum.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo el administrador puede ver la auditoría",
+        )
+    return auditoria.get_auditoria(db, limite)
+
+@app.post("/usuario/foto")
+def subir_foto_route(
+    body: FotoPerfil,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
+    resultado = perfil.subir_foto(body, db, _user)
+    auditoria.registrar(
+        db, _user.username, "PERFIL_FOTO",
+        "Actualizó su foto de perfil" if body.foto else "Quitó su foto de perfil",
+    )
+    return resultado
 
 if __name__ == "__main__":
     import uvicorn

@@ -20,12 +20,35 @@ const COLOR_ESTADOS: Record<string, string> = {
   CANCELADO: "#ef4b4b",
 };
 
+function distanciaKm(a: { lat: number; lon: number }, b: { lat: number; lon: number }): number {
+  const R = 6371;
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLon = ((b.lon - a.lon) * Math.PI) / 180;
+  const lat1 = (a.lat * Math.PI) / 180;
+  const lat2 = (b.lat * Math.PI) / 180;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
 export default function ConductorPanel() {
-  const { sesion, logout } = useAuth();
+  const { sesion, logout, setFoto } = useAuth();
+
+  async function cambiarFoto(dataUrl: string | null) {
+    const res = await api<{ foto: string | null }>("/usuario/foto", {
+      method: "POST",
+      body: JSON.stringify({ foto: dataUrl }),
+    });
+    setFoto(res.foto);
+  }
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [modalEntrega, setModalEntrega] = useState<{ pedido: Pedido; modo: "entrega" | "incidencia" } | null>(null);
   const [modalPassword, setModalPassword] = useState(false);
+  const [optimizado, setOptimizado] = useState<number[] | null>(null);
+  const [optimizando, setOptimizando] = useState(false);
+  const [mensajeOptimizacion, setMensajeOptimizacion] = useState("");
   const mapaCont = useRef<HTMLDivElement>(null);
   const mapaRef = useRef<maplibregl.Map | null>(null);
 
@@ -68,6 +91,63 @@ export default function ConductorPanel() {
   }, []);
 
   const propios = sesion?.id_ref ? pedidos.filter((p) => p.id_conductor === sesion.id_ref) : [];
+
+  const pendientes = propios.filter(
+    (p) => p.estado === "ASIGNADO" || p.estado === "EN_CAMINO",
+  );
+
+  async function optimizarRuta() {
+    const conCoords = pendientes.filter((p) => p.latitud && p.longitud);
+    if (conCoords.length < 2) {
+      setMensajeOptimizacion("Necesitás al menos 2 entregas con coordenadas para optimizar.");
+      return;
+    }
+    setOptimizando(true);
+    setMensajeOptimizacion("");
+    const usaPosicion = navigator.geolocation
+      ? await new Promise<{ lat: number; lon: number } | null>((resolve) => {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+            () => resolve(null),
+            { timeout: 4000, maximumAge: 120000 },
+          );
+        })
+      : null;
+
+    const puntos = conCoords.map((p) => ({
+      id: p.id_pedido,
+      lat: Number(p.latitud),
+      lon: Number(p.longitud),
+      visitado: false,
+    }));
+
+    const orden: number[] = [];
+    const inicio = usaPosicion ? { lat: usaPosicion.lat, lon: usaPosicion.lon } : { lat: puntos[0].lat, lon: puntos[0].lon };
+    let actual = inicio;
+    for (let i = 0; i < puntos.length; i++) {
+      let mejor: (typeof puntos)[number] | null = null;
+      let mejorDist = Infinity;
+      for (const pt of puntos) {
+        if (pt.visitado) continue;
+        const d = distanciaKm({ lat: actual.lat, lon: actual.lon }, { lat: pt.lat, lon: pt.lon });
+        if (d < mejorDist) {
+          mejorDist = d;
+          mejor = pt;
+        }
+      }
+      if (!mejor) break;
+      mejor.visitado = true;
+      orden.push(mejor.id);
+      actual = { lat: mejor.lat, lon: mejor.lon };
+    }
+    setOptimizado(orden);
+    setMensajeOptimizacion(
+      usaPosicion
+        ? "Ruta ordenada desde tu posición actual — la entrega más cercana primero."
+        : "Ruta ordenada desde la primera entrega: seguí el orden numerado.",
+    );
+    setOptimizando(false);
+  }
 
   useEffect(() => {
     const mapa = mapaRef.current;
@@ -142,6 +222,8 @@ export default function ConductorPanel() {
             nombre={sesion?.nombre}
             usuario={sesion?.usuario}
             rol="Conductor"
+            foto={sesion?.foto}
+            onCambiarFoto={cambiarFoto}
             onCambiarPassword={() => setModalPassword(true)}
             onCerrarSesion={logout}
           />
@@ -176,65 +258,106 @@ export default function ConductorPanel() {
         <section className="tarjeta">
           <div className="cabecera-tarjeta">
             <h2>Lista de entregas</h2>
-            <p>Avanzá con la entrega o reportá una incidencia.</p>
+            <p>
+              {optimizado
+                ? "Seguí el orden numerado para ahorrar tiempo y km."
+                : "Avanzá con la entrega o reportá una incidencia."}
+            </p>
           </div>
           <div className="cuerpo-tarjeta">
+            <div className="ruta-toolbar">
+              <button
+                type="button"
+                className="btn btn-ambar"
+                onClick={optimizarRuta}
+                disabled={optimizando}
+              >
+                {optimizando ? "Calculando…" : optimizado ? "Reoptimizar ruta" : "Optimizar ruta"}
+              </button>
+              {optimizado && (
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => setOptimizado(null)}
+                >
+                  Ver orden normal
+                </button>
+              )}
+            </div>
+            {mensajeOptimizacion && <p className="aviso-banner ambar">{mensajeOptimizacion}</p>}
+            {!mensajeOptimizacion && optimizado && (
+              <p className="aviso-banner ambar">Orden optimizado: {optimizado.length} entregas.</p>
+            )}
+
             {propios.length === 0 && (
               <p className="entrega-vacio">
                 No tenés entregas asignadas por el momento. El administrador te asignará pedidos.
               </p>
             )}
-            {propios.map((p) => (
-              <div className="entrega-card" key={p.id_pedido}>
-                <div className="entrega-top">
-                  <span className="codigo-tracking">#{p.id_pedido}</span>
-                  <EstadoPill estado={p.estado} />
-                </div>
-                <p className="entrega-cliente">{nombreCliente(p, clientes)}</p>
-                <p className="entrega-dir">{p.direccion}</p>
-                <div className="entrega-acciones">
-                  {p.estado === "ASIGNADO" && (
-                    <button
-                      className="btn btn-verde"
-                      onClick={() =>
-                        cambiarEstado(p, "EN_CAMINO", `¿Comenzar la entrega #${p.id_pedido}?`)
-                      }
-                    >
-                      Comenzar entrega
-                    </button>
-                  )}
-                  {p.estado === "EN_CAMINO" && (
-                    <>
-                      <button
-                        className="btn btn-verde"
-                        onClick={() => setModalEntrega({ pedido: p, modo: "entrega" })}
-                      >
-                        Marcar entregado
-                      </button>
-                      <button
-                        className="btn btn-rojo"
-                        onClick={() => setModalEntrega({ pedido: p, modo: "incidencia" })}
-                      >
-                        Incidencia
-                      </button>
-                    </>
-                  )}
-                  {p.estado === "INCIDENCIA" && (
-                    <button
-                      className="btn btn-ambar"
-                      onClick={() =>
-                        cambiarEstado(p, "EN_CAMINO", `¿Reanudar la entrega #${p.id_pedido}?`)
-                      }
-                    >
-                      Reanudar entrega
-                    </button>
-                  )}
-                  {p.estado === "ENTREGADO" && (
-                    <span className="entrega-listo">Entrega completada</span>
-                  )}
-                </div>
-              </div>
-            ))}
+            {propios
+              .slice()
+              .sort((a, b) => {
+                if (!optimizado) return 0;
+                return optimizado.indexOf(a.id_pedido) - optimizado.indexOf(b.id_pedido);
+              })
+              .map((p) => {
+                const indice = optimizado ? optimizado.indexOf(p.id_pedido) : -1;
+                return (
+                  <div className="entrega-card" key={p.id_pedido}>
+                    <div className="entrega-top">
+                      {indice >= 0 ? (
+                        <span className="entrega-orden">{indice + 1}</span>
+                      ) : (
+                        <span className="codigo-tracking">#{p.id_pedido}</span>
+                      )}
+                      <EstadoPill estado={p.estado} />
+                    </div>
+                    <p className="entrega-cliente">{nombreCliente(p, clientes)}</p>
+                    <p className="entrega-dir">{p.direccion}</p>
+                    <div className="entrega-acciones">
+                      {p.estado === "ASIGNADO" && (
+                        <button
+                          className="btn btn-verde"
+                          onClick={() =>
+                            cambiarEstado(p, "EN_CAMINO", `¿Comenzar la entrega #${p.id_pedido}?`)
+                          }
+                        >
+                          Comenzar entrega
+                        </button>
+                      )}
+                      {p.estado === "EN_CAMINO" && (
+                        <>
+                          <button
+                            className="btn btn-verde"
+                            onClick={() => setModalEntrega({ pedido: p, modo: "entrega" })}
+                          >
+                            Marcar entregado
+                          </button>
+                          <button
+                            className="btn btn-rojo"
+                            onClick={() => setModalEntrega({ pedido: p, modo: "incidencia" })}
+                          >
+                            Incidencia
+                          </button>
+                        </>
+                      )}
+                      {p.estado === "INCIDENCIA" && (
+                        <button
+                          className="btn btn-ambar"
+                          onClick={() =>
+                            cambiarEstado(p, "EN_CAMINO", `¿Reanudar la entrega #${p.id_pedido}?`)
+                          }
+                        >
+                          Reanudar entrega
+                        </button>
+                      )}
+                      {p.estado === "ENTREGADO" && (
+                        <span className="entrega-listo">Entrega completada</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
           </div>
         </section>
       </main>

@@ -69,6 +69,26 @@ export function nombreConductor(
   return c ? c.nombre : p.id_conductor ? `Conductor #${p.id_conductor}` : "Sin asignar";
 }
 
+export function urlArchivo(nombre?: string | null): string {
+  if (!nombre) return "";
+  if (/^data:/.test(nombre) || /^https?:\/\//.test(nombre)) return nombre;
+  return `${API_URL}/uploads/${encodeURIComponent(nombre)}`;
+}
+
+export function formatearFecha(valor?: string | null): string {
+  if (!valor) return "";
+  const fecha = new Date(valor);
+  if (Number.isNaN(fecha.getTime())) return valor;
+  return fecha.toLocaleString("es-SV", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
 function leerToken(): string | null {
   try {
     const raw = localStorage.getItem(CLAVE_SESION);

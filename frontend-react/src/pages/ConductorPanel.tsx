@@ -7,6 +7,7 @@ import { ESTILO_MAPA } from "../mapa";
 import type { Cliente, Pedido } from "../types";
 import EstadoPill from "../components/EstadoPill";
 import TarjetaConteo from "../components/TarjetaConteo";
+import EntregaModal from "../components/EntregaModal";
 
 const COLOR_ESTADOS: Record<string, string> = {
   PENDIENTE: "#64748b",
@@ -21,6 +22,7 @@ export default function ConductorPanel() {
   const { sesion, logout } = useAuth();
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [modalEntrega, setModalEntrega] = useState<{ pedido: Pedido; modo: "entrega" | "incidencia" } | null>(null);
   const mapaCont = useRef<HTMLDivElement>(null);
   const mapaRef = useRef<maplibregl.Map | null>(null);
 
@@ -199,21 +201,13 @@ export default function ConductorPanel() {
                     <>
                       <button
                         className="btn btn-verde"
-                        onClick={() =>
-                          cambiarEstado(p, "ENTREGADO", `¿Marcar #${p.id_pedido} como entregado?`)
-                        }
+                        onClick={() => setModalEntrega({ pedido: p, modo: "entrega" })}
                       >
                         Marcar entregado
                       </button>
                       <button
                         className="btn btn-rojo"
-                        onClick={() =>
-                          cambiarEstado(
-                            p,
-                            "INCIDENCIA",
-                            `¿Reportar incidencia en #${p.id_pedido}?`,
-                          )
-                        }
+                        onClick={() => setModalEntrega({ pedido: p, modo: "incidencia" })}
                       >
                         Incidencia
                       </button>
@@ -238,6 +232,15 @@ export default function ConductorPanel() {
           </div>
         </section>
       </main>
+
+      {modalEntrega && (
+        <EntregaModal
+          pedido={modalEntrega.pedido}
+          modoInicial={modalEntrega.modo}
+          onCerrar={() => setModalEntrega(null)}
+          onGuardado={cargar}
+        />
+      )}
     </div>
   );
 }

@@ -51,9 +51,24 @@ export interface Pedido {
   latitud: number;
   longitud: number;
   estado: Estado;
+  incidencia_nota?: string | null;
+  foto_entrega?: string | null;
+  firma_entrega?: string | null;
+  entregado_at?: string | null;
   cliente?: { nombre: string } | null;
   conductor?: { nombre: string } | null;
   vehiculo?: { placa: string; tipo: string } | null;
+}
+
+export interface HistorialEntrega {
+  id_historial: number;
+  id_pedido: number;
+  estado: Estado;
+  fecha?: string | null;
+  nota?: string | null;
+  foto?: string | null;
+  firma?: string | null;
+  usuario?: string | null;
 }
 
 export interface CuerpoPedido {

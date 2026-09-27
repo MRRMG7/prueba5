@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { api, nombreCliente } from "../../api";
+import { api, nombreCliente, urlArchivo } from "../../api";
 import type { Cliente, Conductor, Pedido } from "../../types";
 import EstadoPill from "../../components/EstadoPill";
 import FormPedido from "./FormPedido";
@@ -86,13 +86,14 @@ export default function PedidosTab({ pedidos, clientes, conductores, onCambio }:
                 <th>Dirección</th>
                 <th>Estado</th>
                 <th>Asignado a</th>
+                <th>Evidencia</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {lista.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="celda-suave" style={{ textAlign: "center", padding: "28px 12px" }}>
+                  <td colSpan={7} className="celda-suave" style={{ textAlign: "center", padding: "28px 12px" }}>
                     No hay pedidos.
                   </td>
                 </tr>
@@ -120,6 +121,20 @@ export default function PedidosTab({ pedidos, clientes, conductores, onCambio }:
                         </option>
                       ))}
                     </select>
+                  </td>
+                  <td>
+                    {p.foto_entrega ? (
+                      <a
+                        className="btn"
+                        href={urlArchivo(p.foto_entrega)}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        📷 Ver
+                      </a>
+                    ) : (
+                      <span className="celda-suave">—</span>
+                    )}
                   </td>
                   <td>
                     <div className="fila-acciones">

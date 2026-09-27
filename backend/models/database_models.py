@@ -71,8 +71,27 @@ class PedidoModel(Base):
     latitud = Column(Numeric(10, 8), nullable=False)
     longitud = Column(Numeric(11, 8), nullable=False)
     estado = Column(SQLEnum(EstadoPedidoEnum), default=EstadoPedidoEnum.PENDIENTE)
+    incidencia_nota = Column(Text, nullable=True)
+    foto_entrega = Column(String(255), nullable=True)
+    firma_entrega = Column(Text, nullable=True)
+    entregado_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
     cliente = relationship("ClienteModel", back_populates="pedidos")
     conductor = relationship("ConductorModel", back_populates="pedidos")
     vehiculo = relationship("VehiculoModel", back_populates="pedidos")
+    historial = relationship("HistorialPedidoModel", back_populates="pedido")
+
+class HistorialPedidoModel(Base):
+    __tablename__ = "historial_pedidos"
+
+    id_historial = Column(Integer, primary_key=True, index=True)
+    id_pedido = Column(Integer, ForeignKey("pedidos.id_pedido", ondelete="CASCADE"), nullable=False, index=True)
+    estado = Column(SQLEnum(EstadoPedidoEnum), nullable=False)
+    fecha = Column(DateTime, server_default=func.now())
+    nota = Column(Text, nullable=True)
+    foto = Column(String(255), nullable=True)
+    firma = Column(Text, nullable=True)
+    usuario = Column(String(100), nullable=True)
+
+    pedido = relationship("PedidoModel", back_populates="historial")

@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { ESTADO_META, api, nombreCliente, nombreConductor } from "../api";
+import { ESTADO_META, api, nombreCliente, nombreConductor, formatearFecha, urlArchivo } from "../api";
 import { ESTILO_MAPA } from "../mapa";
-import type { Cliente, Conductor, Pedido } from "../types";
+import type { Cliente, Conductor, Pedido, HistorialEntrega } from "../types";
 
 const PASOS: { estado: Pedido["estado"]; etiqueta: string; detalle: string }[] = [
   { estado: "PENDIENTE", etiqueta: "Pedido creado", detalle: "Recibimos tu solicitud." },
@@ -31,6 +31,7 @@ export default function Inicio({ onEntrar }: Props) {
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
   const [pedido, setPedido] = useState<Pedido | null>(null);
+  const [historial, setHistorial] = useState<HistorialEntrega[]>([]);
   const [datos, setDatos] = useState<{ clientes: Cliente[]; conductores: Conductor[] }>({
     clientes: [],
     conductores: [],
@@ -83,7 +84,9 @@ export default function Inicio({ onEntrar }: Props) {
         setError(`No encontramos ningún pedido con el número ${id}.`);
         return;
       }
+      const h = await api<HistorialEntrega[]>(`/pedidos/${id}/historial`);
       setDatos({ clientes: clientes || [], conductores: conductores || [] });
+      setHistorial(h || []);
       setPedido(encontrado);
     } catch {
       setError("No se pudo consultar el estado. Revisá tu conexión e intentá de nuevo.");
@@ -172,7 +175,7 @@ export default function Inicio({ onEntrar }: Props) {
                 <button
                   type="button"
                   className="inicio-volver"
-                  onClick={() => { setPedido(null); setBusqueda(""); setError(""); }}
+                  onClick={() => { setPedido(null); setHistorial([]); setBusqueda(""); setError(""); }}
                 >
                   ← Volver al inicio
                 </button>
@@ -226,6 +229,47 @@ export default function Inicio({ onEntrar }: Props) {
                     </span>
                   </div>
                 </div>
+
+                {historial.length > 0 && (
+                  <div className="inicio-historial">
+                    <b className="inicio-historial-titulo">Historial de la entrega</b>
+                    <div className="inicio-historial-lista">
+                      {historial.map((h) => {
+                        const metaH = ESTADO_META[h.estado];
+                        const esEntrega = h.estado === "ENTREGADO";
+                        return (
+                          <div className={"inicio-h-item" + (esEntrega ? " con-evidencia" : "")} key={h.id_historial}>
+                            <div className="inicio-h-linea">
+                              <span className="inicio-h-punto" style={{ background: metaH?.color || "#94a3b8" }} />
+                              <span className="inicio-h-texto">
+                                <b>{metaH?.etiqueta || h.estado}</b>
+                                {h.usuario && <span className="inicio-h-usuario"> · {h.usuario}</span>}
+                                <small>{formatearFecha(h.fecha)}</small>
+                              </span>
+                            </div>
+                            {h.nota && <p className="inicio-h-nota">{h.nota}</p>}
+                            {esEntrega && (h.firma || h.foto) && (
+                              <div className="inicio-h-evidencias">
+                                {h.firma && (
+                                  <div className="inicio-h-firma">
+                                    <small>Firma de recepción</small>
+                                    <img src={h.firma} alt="Firma de recepción" />
+                                  </div>
+                                )}
+                                {h.foto && (
+                                  <a href={urlArchivo(h.foto)} target="_blank" rel="noreferrer" className="inicio-h-foto">
+                                    <img src={urlArchivo(h.foto)} alt="Evidencia de entrega" />
+                                    <small>Ver evidencia</small>
+                                  </a>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 <div className="inicio-mapa">
                   <div ref={mapaCont} className="inicio-mapa-contenido" />

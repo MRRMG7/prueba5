@@ -1,13 +1,77 @@
+import base64
+import re
+import uuid
+from datetime import datetime
+from pathlib import Path
 from typing import List, Optional
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from config.database import get_db
-from models.database_models import PedidoModel, ClienteModel, ConductorModel, VehiculoModel, RolEnum, EstadoPedidoEnum, UsuarioModel
-from models.schemas import PedidoCreate, PedidoUpdateState, PedidoResponse
+from models.database_models import PedidoModel, ClienteModel, ConductorModel, VehiculoModel, RolEnum, EstadoPedidoEnum, UsuarioModel, HistorialPedidoModel
+from models.schemas import PedidoCreate, PedidoUpdateState, PedidoResponse, HistorialResponse
+
+UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+MIME_EXT = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "image/gif": "gif",
+}
+
+def _guardar_foto(data_url: Optional[str]) -> Optional[str]:
+    if not data_url:
+        return None
+    m = re.match(r"data:(image/(?:jpeg|png|webp|gif));base64,(.+)", data_url, re.DOTALL)
+    if not m:
+        return None
+    mime, b64data = m.group(1), m.group(2)
+    try:
+        datos = base64.b64decode(b64data)
+    except Exception:
+        return None
+    nombre = f"pedido_{uuid.uuid4().hex[:12]}.{MIME_EXT.get(mime, 'jpg')}"
+    (UPLOAD_DIR / nombre).write_bytes(datos)
+    return nombre
+
+def _registrar_historial(
+    db: Session,
+    pedido_id: int,
+    estado: EstadoPedidoEnum,
+    nota: Optional[str] = None,
+    foto: Optional[str] = None,
+    firma: Optional[str] = None,
+    usuario: Optional[str] = None,
+) -> HistorialPedidoModel:
+    registro = HistorialPedidoModel(
+        id_pedido=pedido_id,
+        estado=estado,
+        nota=nota,
+        foto=foto,
+        firma=firma,
+        usuario=usuario,
+    )
+    db.add(registro)
+    return registro
 
 def get_pedidos(db: Session = Depends(get_db)) -> List[PedidoResponse]:
     return db.query(PedidoModel).all()
+
+def obtener_historial(id_pedido: int, db: Session = Depends(get_db)) -> List[HistorialResponse]:
+    pedido = db.query(PedidoModel).filter(PedidoModel.id_pedido == id_pedido).first()
+    if not pedido:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"El pedido con ID {id_pedido} no existe",
+        )
+    return (
+        db.query(HistorialPedidoModel)
+        .filter(HistorialPedidoModel.id_pedido == id_pedido)
+        .order_by(HistorialPedidoModel.id_historial.asc())
+        .all()
+    )
 
 def listar_pedidos_filtrados(
     db: Session = Depends(get_db), 
@@ -72,6 +136,13 @@ def crear_pedido(
     )
 
     db.add(nuevo_pedido)
+    db.flush()
+    _registrar_historial(
+        db,
+        nuevo_pedido.id_pedido,
+        estado_inicial,
+        usuario=current_user.username if current_user else None,
+    )
     db.commit()
     db.refresh(nuevo_pedido)
     return nuevo_pedido
@@ -79,15 +150,29 @@ def crear_pedido(
 def actualizar_pedido_completo(
     id_pedido: int,
     pedido_in: PedidoCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[UsuarioModel] = None
 ) -> PedidoResponse:
     pedido = db.query(PedidoModel).filter(PedidoModel.id_pedido == id_pedido).first()
     if not pedido:
         raise HTTPException(status_code=404, detail="Pedido no encontrado")
     
+    estado_antes = pedido.estado
     for field, value in pedido_in.dict(exclude_unset=True).items():
         setattr(pedido, field, value)
-        
+    
+    if pedido.estado != estado_antes:
+        _registrar_historial(
+            db,
+            pedido.id_pedido,
+            pedido.estado,
+            usuario=current_user.username if current_user else None,
+        )
+        if pedido.estado == EstadoPedidoEnum.INCIDENCIA:
+            pedido.incidencia_nota = pedido.incidencia_nota or "Actualización desde el panel"
+        elif estado_antes == EstadoPedidoEnum.INCIDENCIA:
+            pedido.incidencia_nota = None
+
     db.commit()
     db.refresh(pedido)
     return pedido
@@ -112,7 +197,34 @@ def actualizar_estado_pedido(
             detail="No tienes permiso para modificar un pedido asignado a otro conductor",
         )
 
-    pedido.estado = estado_in.estado
+    nuevo_estado = estado_in.estado
+    anterior = pedido.estado
+    pedido.estado = nuevo_estado
+
+    foto_nombre: Optional[str] = None
+    if nuevo_estado == EstadoPedidoEnum.ENTREGADO:
+        foto_nombre = _guardar_foto(estado_in.foto)
+        if foto_nombre:
+            pedido.foto_entrega = foto_nombre
+        if estado_in.firma:
+            pedido.firma_entrega = estado_in.firma
+        pedido.entregado_at = datetime.utcnow()
+
+    if nuevo_estado == EstadoPedidoEnum.INCIDENCIA:
+        pedido.incidencia_nota = estado_in.nota
+    elif anterior == EstadoPedidoEnum.INCIDENCIA:
+        pedido.incidencia_nota = None
+
+    _registrar_historial(
+        db,
+        pedido.id_pedido,
+        nuevo_estado,
+        nota=estado_in.nota,
+        foto=foto_nombre,
+        firma=estado_in.firma,
+        usuario=current_user.username if current_user else None,
+    )
+
     db.commit()
     db.refresh(pedido)
     return pedido

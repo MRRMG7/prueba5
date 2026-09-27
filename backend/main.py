@@ -3,17 +3,39 @@ import os
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.staticfiles import StaticFiles
+from sqlalchemy import inspect as sa_inspect
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from config.database import get_db, engine
 from config.security import verify_password, create_access_token
-from models.database_models import Base, ClienteModel, ConductorModel, RolEnum, UsuarioModel
+from models.database_models import Base, ClienteModel, ConductorModel, RolEnum, UsuarioModel, HistorialPedidoModel, PedidoModel
 from models.schemas import LoginRequest, RegistroCliente, Token
 from routes import clientes, conductores, vehiculos, pedidos
 from routes.auth import get_current_user, get_current_user_optional, registrar_cliente
 
 # Crear tablas en la base de datos
 Base.metadata.create_all(bind=engine)
+
+# Migraciones ligeras: columnas nuevas en pedidos (foto/firma/historial)
+def _migrar_pedidos():
+    insp = sa_inspect(engine)
+    if not insp.has_table("pedidos"):
+        return
+    cols = {c["name"] for c in insp.get_columns("pedidos")}
+    alteraciones = {
+        "incidencia_nota": "ALTER TABLE pedidos ADD COLUMN incidencia_nota TEXT NULL",
+        "foto_entrega": "ALTER TABLE pedidos ADD COLUMN foto_entrega VARCHAR(255) NULL",
+        "firma_entrega": "ALTER TABLE pedidos ADD COLUMN firma_entrega TEXT NULL",
+        "entregado_at": "ALTER TABLE pedidos ADD COLUMN entregado_at DATETIME NULL",
+    }
+    with engine.begin() as conn:
+        for col, sql in alteraciones.items():
+            if col not in cols:
+                conn.execute(text(sql))
+
+_migrar_pedidos()
 
 app = FastAPI(
     title="API Sistema de Logística y Envíos",
@@ -22,6 +44,10 @@ app = FastAPI(
     docs_url=None if os.getenv("APP_MODE") == "production" else "/docs",
     redoc_url=None if os.getenv("APP_MODE") == "production" else "/redoc",
 )
+
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 @app.get("/version")
 def version():
@@ -202,6 +228,10 @@ def eliminar_vehiculo_route(
 def get_pedidos_route(db: Session = Depends(get_db)):
     return pedidos.get_pedidos(db)
 
+@app.get("/pedidos/{id_pedido}/historial")
+def historial_pedido_route(id_pedido: int, db: Session = Depends(get_db)):
+    return pedidos.obtener_historial(id_pedido, db)
+
 @app.get("/api/pedidos")
 def listar_pedidos_filtrados_route(
     db: Session = Depends(get_db),
@@ -224,7 +254,7 @@ def actualizar_pedido_completo_route(
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
 ):
-    return pedidos.actualizar_pedido_completo(id_pedido, pedido_in, db)
+    return pedidos.actualizar_pedido_completo(id_pedido, pedido_in, db, _user)
 
 @app.put("/pedidos/{id_pedido}/estado")
 def actualizar_estado_pedido_route(

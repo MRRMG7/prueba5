@@ -1,4 +1,5 @@
 from typing import List, Optional
+from datetime import datetime
 from pydantic import BaseModel
 from .database_models import EstadoPedidoEnum
 
@@ -66,6 +67,9 @@ class PedidoCreate(BaseModel):
 
 class PedidoUpdateState(BaseModel):
     estado: EstadoPedidoEnum
+    nota: Optional[str] = None
+    foto: Optional[str] = None
+    firma: Optional[str] = None
 
 class PedidoResponse(BaseModel):
     id_pedido: int
@@ -76,9 +80,29 @@ class PedidoResponse(BaseModel):
     latitud: float
     longitud: float
     estado: EstadoPedidoEnum
+    incidencia_nota: Optional[str] = None
+    foto_entrega: Optional[str] = None
+    firma_entrega: Optional[str] = None
+    entregado_at: Optional[datetime] = None
     cliente: Optional[ClienteResponse] = None
     conductor: Optional[ConductorResponse] = None
     vehiculo: Optional[VehiculoResponse] = None
+    historial: Optional[List["HistorialResponse"]] = None
 
     class Config:
         from_attributes = True
+
+class HistorialResponse(BaseModel):
+    id_historial: int
+    id_pedido: int
+    estado: EstadoPedidoEnum
+    fecha: Optional[datetime] = None
+    nota: Optional[str] = None
+    foto: Optional[str] = None
+    firma: Optional[str] = None
+    usuario: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+PedidoResponse.model_rebuild()

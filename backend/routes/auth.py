@@ -5,7 +5,14 @@ from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 
 from config.database import get_db
-from config.security import verify_password, create_access_token, get_password_hash, SECRET_KEY, ALGORITHM
+from config.security import (
+    verify_password,
+    create_access_token,
+    get_password_hash,
+    SECRET_KEY,
+    ALGORITHM,
+    oauth2_scheme,
+)
 from models.database_models import ClienteModel, RolEnum, UsuarioModel
 from models.schemas import LoginRequest, RegistroCliente, Token
 
@@ -20,6 +27,27 @@ def get_current_user_optional(token: Optional[str], db: Session) -> Optional[Usu
         return db.query(UsuarioModel).filter(UsuarioModel.username == username).first()
     except JWTError:
         return None
+
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> UsuarioModel:
+    cred_error = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="No autenticado",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if not username:
+            raise cred_error
+    except JWTError:
+        raise cred_error
+    user = db.query(UsuarioModel).filter(UsuarioModel.username == username).first()
+    if not user:
+        raise cred_error
+    return user
 
 def registrar_cliente(registro: RegistroCliente, db: Session = Depends(get_db)):
     if db.query(UsuarioModel).filter(UsuarioModel.username == registro.username).first():

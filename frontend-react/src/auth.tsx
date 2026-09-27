@@ -1,9 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { Sesion } from "./types";
-import { api } from "./api";
-
-const CLAVE_SESION = "transporte:sesion:v1";
+import { CLAVE_SESION, api } from "./api";
 
 interface AuthCtx {
   sesion: Sesion | null;

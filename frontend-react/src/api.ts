@@ -2,6 +2,8 @@ import type { Estado } from "./types";
 
 export const API_URL = import.meta.env.VITE_API_URL || "http://192.168.1.22:8000";
 
+export const CLAVE_SESION = "transporte:sesion:v1";
+
 export const ESTADO_META: Record<
   Estado,
   { etiqueta: string; color: string; fondo: string }
@@ -15,11 +17,23 @@ export const ESTADO_META: Record<
 };
 
 export async function api<T>(url: string, opciones: RequestInit = {}): Promise<T> {
+  const token = leerToken();
   const res = await fetch(`${API_URL}${url}`, {
     ...opciones,
-    headers: { "Content-Type": "application/json", ...opciones.headers },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...opciones.headers,
+    },
     cache: "no-store",
   });
+  if (res.status === 401) {
+    try {
+      localStorage.removeItem(CLAVE_SESION);
+    } catch {
+      /* localStorage no disponible */
+    }
+  }
   if (!res.ok) {
     let mensaje = `Error ${res.status}`;
     try {
@@ -53,4 +67,15 @@ export function nombreConductor(
   if (p.conductor?.nombre) return p.conductor.nombre;
   const c = conductores.find((x) => x.id_conductor === p.id_conductor);
   return c ? c.nombre : p.id_conductor ? `Conductor #${p.id_conductor}` : "Sin asignar";
+}
+
+function leerToken(): string | null {
+  try {
+    const raw = localStorage.getItem(CLAVE_SESION);
+    if (!raw) return null;
+    const sesion = JSON.parse(raw) as { access_token?: string };
+    return sesion?.access_token || null;
+  } catch {
+    return null;
+  }
 }

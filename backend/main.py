@@ -10,7 +10,7 @@ from config.security import verify_password, create_access_token
 from models.database_models import Base, ClienteModel, ConductorModel, RolEnum, UsuarioModel
 from models.schemas import LoginRequest, RegistroCliente, Token
 from routes import clientes, conductores, vehiculos, pedidos
-from routes.auth import get_current_user_optional, registrar_cliente
+from routes.auth import get_current_user, get_current_user_optional, registrar_cliente
 
 # Crear tablas en la base de datos
 Base.metadata.create_all(bind=engine)
@@ -49,12 +49,14 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
             detail="Usuario o contraseña incorrectos",
         )
 
+    access_token = create_access_token(data={"sub": user.username, "rol": user.rol.value})
     return {
         "id_usuario": user.id_usuario,
         "usuario": user.username,
         "nombre": _nombre_real(db, user),
         "rol": user.rol.value,
         "id_ref": user.id_ref,
+        "access_token": access_token,
     }
 
 def _nombre_real(db: Session, user: UsuarioModel) -> str:
@@ -102,15 +104,28 @@ def get_clientes_route(db: Session = Depends(get_db)):
     return clientes.get_clientes(db)
 
 @app.post("/clientes", status_code=status.HTTP_201_CREATED)
-def crear_cliente_route(cliente: clientes.ClienteBase, db: Session = Depends(get_db)):
+def crear_cliente_route(
+    cliente: clientes.ClienteBase,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
     return clientes.crear_cliente(cliente, db)
 
 @app.put("/clientes/{id_cliente}")
-def actualizar_cliente_route(id_cliente: int, cliente_in: clientes.ClienteBase, db: Session = Depends(get_db)):
+def actualizar_cliente_route(
+    id_cliente: int,
+    cliente_in: clientes.ClienteBase,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
     return clientes.actualizar_cliente(id_cliente, cliente_in, db)
 
 @app.delete("/clientes/{id_cliente}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_cliente_route(id_cliente: int, db: Session = Depends(get_db)):
+def eliminar_cliente_route(
+    id_cliente: int,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
     return clientes.eliminar_cliente(id_cliente, db)
 
 # ==========================================
@@ -122,15 +137,28 @@ def get_conductores_route(db: Session = Depends(get_db)):
     return conductores.get_conductores(db)
 
 @app.post("/conductores", status_code=status.HTTP_201_CREATED)
-def crear_conductor_route(conductor: conductores.ConductorBase, db: Session = Depends(get_db)):
+def crear_conductor_route(
+    conductor: conductores.ConductorBase,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
     return conductores.crear_conductor(conductor, db)
 
 @app.put("/conductores/{id_conductor}")
-def actualizar_conductor_route(id_conductor: int, cond_in: conductores.ConductorBase, db: Session = Depends(get_db)):
+def actualizar_conductor_route(
+    id_conductor: int,
+    cond_in: conductores.ConductorBase,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
     return conductores.actualizar_conductor(id_conductor, cond_in, db)
 
 @app.delete("/conductores/{id_conductor}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_conductor_route(id_conductor: int, db: Session = Depends(get_db)):
+def eliminar_conductor_route(
+    id_conductor: int,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
     return conductores.eliminar_conductor(id_conductor, db)
 
 # ==========================================
@@ -142,15 +170,28 @@ def get_vehiculos_route(db: Session = Depends(get_db)):
     return vehiculos.get_vehiculos(db)
 
 @app.post("/vehiculos", status_code=status.HTTP_201_CREATED)
-def crear_vehiculo_route(vehiculo: vehiculos.VehiculoBase, db: Session = Depends(get_db)):
+def crear_vehiculo_route(
+    vehiculo: vehiculos.VehiculoBase,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
     return vehiculos.crear_vehiculo(vehiculo, db)
 
 @app.put("/vehiculos/{id_vehiculo}")
-def actualizar_vehiculo_route(id_vehiculo: int, veh_in: vehiculos.VehiculoBase, db: Session = Depends(get_db)):
+def actualizar_vehiculo_route(
+    id_vehiculo: int,
+    veh_in: vehiculos.VehiculoBase,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
     return vehiculos.actualizar_vehiculo(id_vehiculo, veh_in, db)
 
 @app.delete("/vehiculos/{id_vehiculo}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_vehiculo_route(id_vehiculo: int, db: Session = Depends(get_db)):
+def eliminar_vehiculo_route(
+    id_vehiculo: int,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
     return vehiculos.eliminar_vehiculo(id_vehiculo, db)
 
 # ==========================================
@@ -162,23 +203,44 @@ def get_pedidos_route(db: Session = Depends(get_db)):
     return pedidos.get_pedidos(db)
 
 @app.get("/api/pedidos")
-def listar_pedidos_filtrados_route(db: Session = Depends(get_db), token: str = None):
-    return pedidos.listar_pedidos_filtrados(db, token)
+def listar_pedidos_filtrados_route(
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
+    return pedidos.listar_pedidos_filtrados(db, _user)
 
 @app.post("/pedidos", status_code=status.HTTP_201_CREATED)
-def crear_pedido_route(pedido_in: pedidos.PedidoCreate, db: Session = Depends(get_db), token: str = None):
-    return pedidos.crear_pedido(pedido_in, db, token)
+def crear_pedido_route(
+    pedido_in: pedidos.PedidoCreate,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
+    return pedidos.crear_pedido(pedido_in, db, _user)
 
 @app.put("/pedidos/{id_pedido}")
-def actualizar_pedido_completo_route(id_pedido: int, pedido_in: pedidos.PedidoCreate, db: Session = Depends(get_db)):
+def actualizar_pedido_completo_route(
+    id_pedido: int,
+    pedido_in: pedidos.PedidoCreate,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
     return pedidos.actualizar_pedido_completo(id_pedido, pedido_in, db)
 
 @app.put("/pedidos/{id_pedido}/estado")
-def actualizar_estado_pedido_route(id_pedido: int, estado_in: pedidos.PedidoUpdateState, db: Session = Depends(get_db), token: str = None):
-    return pedidos.actualizar_estado_pedido(id_pedido, estado_in, db, token)
+def actualizar_estado_pedido_route(
+    id_pedido: int,
+    estado_in: pedidos.PedidoUpdateState,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
+    return pedidos.actualizar_estado_pedido(id_pedido, estado_in, db, _user)
 
 @app.delete("/pedidos/{id_pedido}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_pedido_route(id_pedido: int, db: Session = Depends(get_db)):
+def eliminar_pedido_route(
+    id_pedido: int,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
     return pedidos.eliminar_pedido(id_pedido, db)
 
 if __name__ == "__main__":

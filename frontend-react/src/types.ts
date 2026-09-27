@@ -6,6 +6,7 @@ export interface Sesion {
   nombre: string;
   rol: Rol;
   id_ref: number | null;
+  access_token?: string;
 }
 
 export interface Cliente {

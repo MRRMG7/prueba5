@@ -3,18 +3,16 @@ from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from config.database import get_db
-from models.database_models import PedidoModel, ClienteModel, ConductorModel, VehiculoModel, RolEnum, EstadoPedidoEnum
+from models.database_models import PedidoModel, ClienteModel, ConductorModel, VehiculoModel, RolEnum, EstadoPedidoEnum, UsuarioModel
 from models.schemas import PedidoCreate, PedidoUpdateState, PedidoResponse
-from routes.auth import get_current_user_optional
 
 def get_pedidos(db: Session = Depends(get_db)) -> List[PedidoResponse]:
     return db.query(PedidoModel).all()
 
 def listar_pedidos_filtrados(
     db: Session = Depends(get_db), 
-    token: Optional[str] = None
+    current_user: Optional[UsuarioModel] = None
 ) -> List[PedidoResponse]:
-    current_user = get_current_user_optional(token, db)
     if current_user:
         if current_user.rol == RolEnum.CONDUCTOR:
             return db.query(PedidoModel).filter(PedidoModel.id_conductor == current_user.id_ref).all()
@@ -25,9 +23,8 @@ def listar_pedidos_filtrados(
 def crear_pedido(
     pedido_in: PedidoCreate,
     db: Session = Depends(get_db),
-    token: Optional[str] = None
+    current_user: Optional[UsuarioModel] = None
 ) -> PedidoResponse:
-    current_user = get_current_user_optional(token, db)
     
     if current_user and current_user.rol == RolEnum.CLIENTE and pedido_in.id_cliente != current_user.id_ref:
         raise HTTPException(
@@ -99,9 +96,8 @@ def actualizar_estado_pedido(
     id_pedido: int,
     estado_in: PedidoUpdateState,
     db: Session = Depends(get_db),
-    token: Optional[str] = None
+    current_user: Optional[UsuarioModel] = None
 ) -> PedidoResponse:
-    current_user = get_current_user_optional(token, db)
     pedido = db.query(PedidoModel).filter(PedidoModel.id_pedido == id_pedido).first()
     
     if not pedido:

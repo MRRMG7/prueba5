@@ -214,27 +214,40 @@ export default function ConductorPanel() {
     (p) => p.estado === "EN_CAMINO" || p.estado === "INCIDENCIA" || p.estado === "ENTREGADO",
   );
 
-  const [codigo, setCodigo] = useState("");
+  // Un codigo por pedido: cada tarjeta tiene su propio campo.
+  const [codigos, setCodigos] = useState<Record<number, string>>({});
   const [recolectandoId, setRecolectandoId] = useState<number | null>(null);
-  const [msgRecolecta, setMsgRecolecta] = useState("");
+  const [msgRecolecta, setMsgRecolecta] = useState<Record<number, string>>({});
   const [enviandoId, setEnviandoId] = useState<number | null>(null);
 
+  function setCodigoDe(id: number, valor: string) {
+    setCodigos((c) => ({ ...c, [id]: valor }));
+  }
+
+  function setMsgDe(id: number, texto: string) {
+    setMsgRecolecta((m) => ({ ...m, [id]: texto }));
+  }
+
   async function recolectarPedido(p: Pedido) {
-    setMsgRecolecta("");
-    if (!codigo.trim()) {
-      setMsgRecolecta("Ingresá el código de recolecta.");
+    const codigo = (codigos[p.id_pedido] || "").trim();
+    setMsgDe(p.id_pedido, "");
+    if (!codigo) {
+      setMsgDe(p.id_pedido, "Ingresá el código de recolecta.");
       return;
     }
     setRecolectandoId(p.id_pedido);
     try {
       await api(`/pedidos/${p.id_pedido}/recolectar`, {
         method: "POST",
-        body: JSON.stringify({ codigo: codigo.trim() }),
+        body: JSON.stringify({ codigo }),
       });
-      setCodigo("");
+      setCodigoDe(p.id_pedido, "");
       await cargar();
     } catch (err) {
-      setMsgRecolecta(err instanceof Error ? err.message : "No se pudo recolectar");
+      setMsgDe(
+        p.id_pedido,
+        err instanceof Error ? err.message : "No se pudo recolectar",
+      );
     } finally {
       setRecolectandoId(null);
     }
@@ -331,8 +344,8 @@ export default function ConductorPanel() {
                       style={{ maxWidth: 160, marginBottom: 0 }}
                       type="text"
                       placeholder="Código R-####"
-                      value={codigo}
-                      onChange={(e) => setCodigo(e.target.value)}
+                      value={codigos[p.id_pedido] || ""}
+                      onChange={(e) => setCodigoDe(p.id_pedido, e.target.value)}
                     />
                     <button
                       className="btn btn-verde"
@@ -348,7 +361,11 @@ export default function ConductorPanel() {
                       Incidencia
                     </button>
                   </div>
-                  {msgRecolecta && <p className="error-login" style={{ marginTop: 6 }}>{msgRecolecta}</p>}
+                  {msgRecolecta[p.id_pedido] && (
+                    <p className="error-login" style={{ marginTop: 6 }}>
+                      {msgRecolecta[p.id_pedido]}
+                    </p>
+                  )}
                 </div>
               </div>
             ))}

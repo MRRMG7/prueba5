@@ -34,11 +34,21 @@ export default function Inicio({ onEntrar }: Props) {
   const [pedido, setPedido] = useState<Pedido | null>(null);
   const [historial, setHistorial] = useState<HistorialEntrega[]>([]);
   const [evidencia, setEvidencia] = useState<string | null>(null);
+  const [ultimo, setUltimo] = useState("");
   const [datos, setDatos] = useState<{ clientes: Cliente[]; conductores: Conductor[] }>({
     clientes: [],
     conductores: [],
   });
   const mapaCont = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try {
+      const guardado = localStorage.getItem("inicio.ultimaConsulta");
+      if (guardado) setBusqueda(guardado);
+    } catch {
+      /* localStorage puede estar bloqueado */
+    }
+  }, []);
 
   useEffect(() => {
     if (!pedido || !mapaCont.current) return;
@@ -64,15 +74,8 @@ export default function Inicio({ onEntrar }: Props) {
     };
   }, [pedido]);
 
-  async function buscar(e: FormEvent) {
-    e.preventDefault();
-    const texto = busqueda.trim().replace(/^#/, "");
-    const id = Number(texto);
+  async function consultar(id: number) {
     setError("");
-    if (!texto || !Number.isFinite(id) || id <= 0) {
-      setError("Ingresá un número de seguimiento válido, por ejemplo 1 o #1.");
-      return;
-    }
     setCargando(true);
     setPedido(null);
     try {
@@ -90,11 +93,29 @@ export default function Inicio({ onEntrar }: Props) {
       setDatos({ clientes: clientes || [], conductores: conductores || [] });
       setHistorial(h || []);
       setPedido(encontrado);
+      setUltimo(String(id));
+      try {
+        localStorage.setItem("inicio.ultimaConsulta", String(id));
+      } catch {
+        /* localStorage puede estar bloqueado */
+      }
     } catch {
       setError("No se pudo consultar el estado. Revisá tu conexión e intentá de nuevo.");
     } finally {
       setCargando(false);
     }
+  }
+
+  function buscar(e: FormEvent) {
+    e.preventDefault();
+    const texto = busqueda.trim().replace(/^#/, "");
+    const id = Number(texto);
+    if (!texto || !Number.isFinite(id) || id <= 0) {
+      setError("Ingresá un número de seguimiento válido, por ejemplo 1 o #1.");
+      return;
+    }
+    setBusqueda(String(id));
+    consultar(id);
   }
 
   const meta = pedido ? ESTADO_META[pedido.estado] : null;
@@ -126,15 +147,38 @@ export default function Inicio({ onEntrar }: Props) {
           </p>
 
           <form onSubmit={buscar} className="buscar-form">
-            <input
-              value={busqueda}
+            <div className="buscar-campo">
+              <input
+                value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
                 placeholder="Nº de seguimiento (ej. 1 o #1)"
+                aria-label="Número de seguimiento"
               />
-              <button type="submit" className="btn btn-ambar" disabled={cargando}>
-                {cargando ? "Buscando…" : "Ver estado"}
-              </button>
-            </form>
+              {busqueda && (
+                <button
+                  type="button"
+                  className="buscar-limpiar"
+                  onClick={() => { setBusqueda(""); setError(""); }}
+                  aria-label="Limpiar"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+            <button type="submit" className="btn btn-ambar" disabled={cargando}>
+              {cargando ? "Buscando…" : "Ver estado"}
+            </button>
+          </form>
+
+          {ultimo && !pedido && !cargando && (
+            <button
+              type="button"
+              className="inicio-ultima"
+              onClick={() => consultar(Number(ultimo))}
+            >
+              Volver a consultar el pedido #{ultimo}
+            </button>
+          )}
         </div>
 
             {error && <p className="aviso-banner rojo">{error}</p>}

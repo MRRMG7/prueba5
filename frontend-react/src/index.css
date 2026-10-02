@@ -262,6 +262,50 @@ transform: translate(-50%, -150%);
 
 .inicio-buscador .buscar-form { margin-top: 18px; width: 100%; }
 
+.buscar-campo {
+  position: relative;
+  flex: 1;
+  display: flex;
+}
+
+.buscar-campo input { padding-right: 38px; }
+
+.buscar-limpiar {
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--papel-100);
+  color: var(--tinta-500);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.buscar-limpiar:hover { background: var(--linea-borde); color: var(--tinta-900); }
+
+.inicio-ultima {
+  display: block;
+  margin: 14px auto 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--fuente);
+  font-size: 13px;
+  color: var(--tinta-500);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.inicio-ultima:hover { color: var(--tinta-900); }
+
 .inicio-buscador .inicio-resultado,
 .inicio-buscador .aviso-banner { width: 100%; max-width: 720px; }
 
@@ -299,7 +343,10 @@ transform: translate(-50%, -150%);
 .inicio-info-lista > div {
   border-top: 2px solid var(--amber);
   padding-top: 12px;
+  transition: padding-left .18s ease;
 }
+
+.inicio-info-lista > div:hover { padding-left: 7px; }
 
 .inicio-info-lista dt {
   font-size: 13.5px;

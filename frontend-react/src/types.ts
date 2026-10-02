@@ -47,7 +47,6 @@ export type Estado =
   | "PENDIENTE"
   | "ASIGNADO"
   | "RECOLECTADO"
-  | "EN_CAMINO"
   | "ENTREGADO"
   | "INCIDENCIA"
   | "CANCELADO";

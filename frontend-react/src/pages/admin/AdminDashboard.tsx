@@ -17,7 +17,7 @@ type Seccion = "resumen" | "paquetes" | "conductores" | "vehiculos" | "clientes"
 const CONTEOS_COLORES: Record<string, string> = {
   PENDIENTE: "#64748b",
   ASIGNADO: "#334155",
-  EN_CAMINO: "#f5a623",
+  RECOLECTADO: "#7c3aed",
   ENTREGADO: "#2ec4b6",
   INCIDENCIA: "#f36c2e",
   CANCELADO: "#ef4b4b",
@@ -27,7 +27,7 @@ const CONTEOS_COLORES: Record<string, string> = {
 const CONTEOS_LABEL: Record<string, string> = {
   PENDIENTE: "Pendientes",
   ASIGNADO: "Asignados",
-  EN_CAMINO: "En camino",
+  RECOLECTADO: "Recolectados",
   ENTREGADO: "Entregados",
   INCIDENCIA: "Incidencias",
   CANCELADO: "Cancelados",
@@ -147,7 +147,7 @@ export default function AdminDashboard() {
   const conteos = {
     PENDIENTE: pedidos.filter((p) => p.estado === "PENDIENTE").length,
     ASIGNADO: pedidos.filter((p) => p.estado === "ASIGNADO").length,
-    EN_CAMINO: pedidos.filter((p) => p.estado === "EN_CAMINO").length,
+    RECOLECTADO: pedidos.filter((p) => p.estado === "RECOLECTADO").length,
     ENTREGADO: pedidos.filter((p) => p.estado === "ENTREGADO").length,
     INCIDENCIA: pedidos.filter((p) => p.estado === "INCIDENCIA").length,
     CANCELADO: pedidos.filter((p) => p.estado === "CANCELADO").length,
@@ -243,7 +243,7 @@ export default function AdminDashboard() {
                       <thead>
                         <tr>
                           <th>Conductor</th>
-                          <th>En ruta</th>
+                          <th>Por entregar</th>
                           <th>Entregados</th>
                           <th>Incidencias</th>
                           <th>Licencia</th>
@@ -262,7 +262,7 @@ export default function AdminDashboard() {
                           return (
                             <tr key={c.id_conductor}>
                               <td className="celda-fuerte">{c.nombre}</td>
-                              <td>{de.filter((p) => p.estado === "EN_CAMINO").length}</td>
+                              <td>{de.filter((p) => p.estado === "RECOLECTADO").length}</td>
                               <td>{de.filter((p) => p.estado === "ENTREGADO").length}</td>
                               <td>{de.filter((p) => p.estado === "INCIDENCIA").length}</td>
                               <td className="celda-suave">{c.licencia || "—"}</td>

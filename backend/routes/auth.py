@@ -13,8 +13,8 @@ from config.security import (
     ALGORITHM,
     oauth2_scheme,
 )
-from models.database_models import ClienteModel, ConductorModel, RolEnum, UsuarioModel, ProveedorModel
-from models.schemas import LoginRequest, RegistroCliente, RegistroConductor, RegistroProveedor, CambiarPassword, Token
+from models.database_models import ConductorModel, RolEnum, UsuarioModel, ProveedorModel
+from models.schemas import LoginRequest, RegistroConductor, RegistroProveedor, CambiarPassword, Token
 
 def get_current_user_optional(token: Optional[str], db: Session) -> Optional[UsuarioModel]:
     if not token:
@@ -49,54 +49,6 @@ def get_current_user(
     if not user:
         raise cred_error
     return user
-
-def registrar_cliente(registro: RegistroCliente, db: Session = Depends(get_db)):
-    if db.query(UsuarioModel).filter(UsuarioModel.username == registro.username).first():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El nombre de usuario ya está registrado",
-        )
-
-    if db.query(ClienteModel).filter(ClienteModel.email == registro.email).first():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El correo ya está registrado",
-        )
-
-    nuevo_cliente = ClienteModel(
-        nombre=registro.nombre,
-        telefono=registro.telefono,
-        email=registro.email,
-        direccion=registro.direccion,
-    )
-    db.add(nuevo_cliente)
-
-    try:
-        db.flush()
-
-        nuevo_usuario = UsuarioModel(
-            username=registro.username,
-            password_hash=get_password_hash(registro.password),
-            rol=RolEnum.CLIENTE,
-            id_ref=nuevo_cliente.id_cliente,
-        )
-        db.add(nuevo_usuario)
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El nombre de usuario o el correo ya están registrados",
-        )
-
-    db.refresh(nuevo_usuario)
-    return {
-        "id_usuario": nuevo_usuario.id_usuario,
-        "id_cliente": nuevo_cliente.id_cliente,
-        "username": nuevo_usuario.username,
-        "email": nuevo_cliente.email,
-        "rol": nuevo_usuario.rol.value,
-    }
 
 def registrar_conductor(registro: RegistroConductor, db: Session = Depends(get_db)):
     if db.query(UsuarioModel).filter(UsuarioModel.username == registro.username).first():

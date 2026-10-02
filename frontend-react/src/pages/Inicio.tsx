@@ -11,7 +11,6 @@ const PASOS: { estado: Pedido["estado"]; etiqueta: string; detalle: string }[] =
   { estado: "PENDIENTE", etiqueta: "Pedido creado", detalle: "Recibimos tu solicitud." },
   { estado: "ASIGNADO", etiqueta: "Repartidor asignado", detalle: "Ya tiene quién lo lleve." },
   { estado: "RECOLECTADO", etiqueta: "Recolectado", detalle: "El paquete ya fue recogido." },
-  { estado: "EN_CAMINO", etiqueta: "En camino", detalle: "Tu entrega va en ruta." },
   { estado: "ENTREGADO", etiqueta: "Entregado", detalle: "Recibido en destino." },
 ];
 
@@ -19,8 +18,7 @@ const AVANCE: Record<string, number> = {
   PENDIENTE: 1,
   ASIGNADO: 2,
   RECOLECTADO: 3,
-  EN_CAMINO: 4,
-  ENTREGADO: 5,
+  ENTREGADO: 4,
   INCIDENCIA: 2,
   CANCELADO: 1,
 };

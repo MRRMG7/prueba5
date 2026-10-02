@@ -25,14 +25,6 @@ class ClienteResponse(ClienteBase):
     class Config:
         from_attributes = True
 
-class RegistroCliente(BaseModel):
-    nombre: str
-    telefono: str
-    email: str
-    direccion: str
-    username: str
-    password: str
-
 class RegistroProveedor(BaseModel):
     nombre: str
     telefono: str

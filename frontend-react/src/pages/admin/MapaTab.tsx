@@ -11,7 +11,7 @@ import FormPedido from "./FormPedido";
 const COLOR_ESTADOS: Record<string, string> = {
   PENDIENTE: "#64748b",
   ASIGNADO: "#334155",
-  EN_CAMINO: "#f5a623",
+  RECOLECTADO: "#7c3aed",
   ENTREGADO: "#2ec4b6",
   INCIDENCIA: "#f36c2e",
   CANCELADO: "#ef4b4b",

@@ -11,12 +11,11 @@ from sqlalchemy.orm import Session
 from config.database import get_db, engine
 from config.security import verify_password, create_access_token
 from models.database_models import Base, ClienteModel, ConductorModel, RolEnum, UsuarioModel, HistorialPedidoModel, PedidoModel, ProveedorModel
-from models.schemas import LoginRequest, RegistroCliente, RegistroConductor, RegistroProveedor, CambiarPassword, Token, FotoPerfil, AprobarPedido, RecolectarPedido
+from models.schemas import LoginRequest, RegistroConductor, RegistroProveedor, CambiarPassword, Token, FotoPerfil, AprobarPedido, RecolectarPedido
 from routes import clientes, conductores, vehiculos, pedidos, auditoria, perfil, proveedores
 from routes.auth import (
     get_current_user,
     get_current_user_optional,
-    registrar_cliente,
     registrar_conductor,
     registrar_proveedor,
     cambiar_password,
@@ -98,9 +97,9 @@ def _migrar_rol_proveedor():
 _migrar_rol_proveedor()
 
 # Migración: agregar RECOLECTADO al ENUM de estado de pedidos y su historial
-_ESTADOS_PEDIDO = "'PENDIENTE','ASIGNADO','RECOLECTADO','EN_CAMINO','ENTREGADO','INCIDENCIA','CANCELADO'"
+_ESTADOS_PEDIDO = "'PENDIENTE','ASIGNADO','RECOLECTADO','ENTREGADO','INCIDENCIA','CANCELADO'"
 
-def _migrar_estado_recolectado():
+def _migrar_estados_pedido():
     insp = sa_inspect(engine)
     dialecto = engine.dialect.name
     for tabla in ("pedidos", "historial_pedidos"):
@@ -113,16 +112,20 @@ def _migrar_estado_recolectado():
                     f"WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '{tabla}' "
                     f"AND COLUMN_NAME = 'estado'"
                 )).scalar()
-                if tipo and "RECOLECTADO" in tipo.upper():
+                if tipo and "RECOLECTADO" in tipo.upper() and "EN_CAMINO" not in tipo.upper():
                     continue
+                # Los pedidos que quedaron 'EN_CAMINO' al borrar ese estado son
+                # paquetes ya recolectados: se degradan a RECOLECTADO.
+                conn.execute(text(f"UPDATE {tabla} SET estado='RECOLECTADO' WHERE estado='EN_CAMINO'"))
                 conn.execute(text(f"ALTER TABLE {tabla} MODIFY estado ENUM({_ESTADOS_PEDIDO}) NOT NULL"))
         elif dialecto == "sqlite":
             with engine.begin() as conn:
                 ddl = conn.execute(text(
                     f"SELECT sql FROM sqlite_master WHERE type='table' AND name='{tabla}'"
                 )).scalar()
-                if ddl and "RECOLECTADO" in ddl.upper():
+                if ddl and "RECOLECTADO" in ddl.upper() and "EN_CAMINO" not in ddl.upper():
                     continue
+                conn.execute(text(f"UPDATE {tabla} SET estado='RECOLECTADO' WHERE estado='EN_CAMINO'"))
             columnas = insp.get_columns(tabla)
             defs = []
             for col in columnas:
@@ -130,7 +133,7 @@ def _migrar_estado_recolectado():
                 if nombre == "estado":
                     defs.append(
                         "estado VARCHAR(16) NOT NULL CHECK (estado IN ('PENDIENTE','ASIGNADO',"
-                        "'RECOLECTADO','EN_CAMINO','ENTREGADO','INCIDENCIA','CANCELADO'))"
+                        "'RECOLECTADO','ENTREGADO','INCIDENCIA','CANCELADO'))"
                     )
                 else:
                     tipo_col = str(col["type"])
@@ -156,7 +159,7 @@ def _migrar_estado_recolectado():
                 conn.execute(text(f'ALTER TABLE "{tabla}_nueva" RENAME TO "{tabla}"'))
             insp = sa_inspect(engine)
 
-_migrar_estado_recolectado()
+_migrar_estados_pedido()
 
 app = FastAPI(
     title="API Sistema de Logística y Envíos",
@@ -243,15 +246,6 @@ def login_for_access_token(
         "rol": user.rol.value,
         "username": user.username,
     }
-
-@app.post("/registro", status_code=status.HTTP_201_CREATED)
-def registrar_cliente_route(registro: RegistroCliente, db: Session = Depends(get_db)):
-    resultado = registrar_cliente(registro, db)
-    auditoria.registrar(
-        db, resultado.get("username"), "CLIENTE_AUTOREGISTRO",
-        f"Registro de cliente {resultado.get('email')}",
-    )
-    return resultado
 
 @app.post("/registro-conductor", status_code=status.HTTP_201_CREATED)
 def registrar_conductor_route(registro: RegistroConductor, db: Session = Depends(get_db)):
@@ -480,16 +474,16 @@ def recolectar_pedido_route(
     )
     return resultado
 
-@app.post("/pedidos/{id_pedido}/iniciar-entrega")
-def iniciar_entrega_pedido_route(
+@app.post("/pedidos/{id_pedido}/reanudar")
+def reanudar_pedido_route(
     id_pedido: int,
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
 ):
-    resultado = pedidos.iniciar_entrega_pedido(id_pedido, db, _user)
+    resultado = pedidos.reanudar_pedido(id_pedido, db, _user)
     auditoria.registrar(
         db, _user.username, "PEDIDO_ESTADO",
-        f"Pedido {id_pedido} sale a entrega",
+        f"Pedido {id_pedido} reanuda en estado {resultado.estado}",
     )
     return resultado
 

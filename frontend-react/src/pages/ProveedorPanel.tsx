@@ -76,7 +76,7 @@ const [pedidos, setPedidos] = useState<Pedido[]>([]);
     pendientes: pedidos.filter(
       (p) => p.estado === "PENDIENTE" || p.estado === "ASIGNADO" || p.estado === "RECOLECTADO",
     ).length,
-    enCamino: pedidos.filter((p) => p.estado === "EN_CAMINO").length,
+    recolectados: pedidos.filter((p) => p.estado === "RECOLECTADO").length,
     entregados: pedidos.filter((p) => p.estado === "ENTREGADO").length,
     incidencias: pedidos.filter((p) => p.estado === "INCIDENCIA").length,
   };
@@ -115,7 +115,7 @@ const [pedidos, setPedidos] = useState<Pedido[]>([]);
 
         <div className="fila-conteos">
           <TarjetaConteo valor={conteos.pendientes} etiqueta="En proceso" color="#334155" />
-          <TarjetaConteo valor={conteos.enCamino} etiqueta="En camino" color="#f5a623" />
+          <TarjetaConteo valor={conteos.recolectados} etiqueta="Recolectados" color="#7c3aed" />
           <TarjetaConteo valor={conteos.entregados} etiqueta="Entregados" color="#2ec4b6" />
           <TarjetaConteo valor={conteos.incidencias} etiqueta="Incidencias" color="#f36c2e" />
         </div>

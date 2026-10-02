@@ -15,7 +15,6 @@ const COLOR_ESTADOS: Record<string, string> = {
   PENDIENTE: "#64748b",
   ASIGNADO: "#334155",
   RECOLECTADO: "#7c3aed",
-  EN_CAMINO: "#f5a623",
   ENTREGADO: "#2ec4b6",
   INCIDENCIA: "#f36c2e",
   CANCELADO: "#ef4b4b",
@@ -93,10 +92,8 @@ export default function ConductorPanel() {
 
   const propios = sesion?.id_ref ? pedidos.filter((p) => p.id_conductor === sesion.id_ref) : [];
 
-      const pendientes = propios.filter((p) => p.estado === "EN_CAMINO");
-
-  async function optimizarRuta() {
-    const conCoords = pendientes.filter((p) => p.latitud && p.longitud);
+      async function optimizarRuta() {
+    const conCoords = recolectados.filter((p) => p.latitud && p.longitud);
     if (conCoords.length < 2) {
       setMensajeOptimizacion("Necesitás al menos 2 entregas con coordenadas para optimizar.");
       return;
@@ -183,13 +180,10 @@ export default function ConductorPanel() {
     }
   }, [propios, clientes]);
 
-  async function cambiarEstado(p: Pedido, estado: Pedido["estado"], mensaje: string) {
+  async function cambiarEstado(p: Pedido, mensaje: string) {
     if (!confirm(mensaje)) return;
     try {
-      await api(`/pedidos/${p.id_pedido}/estado`, {
-        method: "PUT",
-        body: JSON.stringify({ estado }),
-      });
+      await api(`/pedidos/${p.id_pedido}/reanudar`, { method: "POST" });
       await cargar();
     } catch (err) {
       alert(err instanceof Error ? err.message : "Error");
@@ -199,7 +193,6 @@ export default function ConductorPanel() {
   const conteos = {
     porRecolectar: propios.filter((p) => p.estado === "ASIGNADO").length,
     recolectados: propios.filter((p) => p.estado === "RECOLECTADO").length,
-    enCamino: propios.filter((p) => p.estado === "EN_CAMINO").length,
     entregados: propios.filter((p) => p.estado === "ENTREGADO").length,
     incidencias: propios.filter((p) => p.estado === "INCIDENCIA").length,
   };
@@ -210,15 +203,14 @@ export default function ConductorPanel() {
   const recolectados = propios
     .filter((p) => p.estado === "RECOLECTADO")
     .sort((a, b) => a.id_pedido - b.id_pedido);
-  const enRuta = propios.filter(
-    (p) => p.estado === "EN_CAMINO" || p.estado === "INCIDENCIA" || p.estado === "ENTREGADO",
+  const seguimiento = propios.filter(
+    (p) => p.estado === "INCIDENCIA" || p.estado === "ENTREGADO",
   );
 
   // Un codigo por pedido: cada tarjeta tiene su propio campo.
   const [codigos, setCodigos] = useState<Record<number, string>>({});
   const [recolectandoId, setRecolectandoId] = useState<number | null>(null);
   const [msgRecolecta, setMsgRecolecta] = useState<Record<number, string>>({});
-  const [enviandoId, setEnviandoId] = useState<number | null>(null);
 
   function setCodigoDe(id: number, valor: string) {
     setCodigos((c) => ({ ...c, [id]: valor }));
@@ -250,18 +242,6 @@ export default function ConductorPanel() {
       );
     } finally {
       setRecolectandoId(null);
-    }
-  }
-
-  async function pasarAEntrega(p: Pedido) {
-    setEnviandoId(p.id_pedido);
-    try {
-      await api(`/pedidos/${p.id_pedido}/iniciar-entrega`, { method: "POST" });
-      await cargar();
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "No se pudo iniciar la entrega");
-    } finally {
-      setEnviandoId(null);
     }
   }
 
@@ -300,7 +280,6 @@ export default function ConductorPanel() {
         <div className="fila-conteos">
           <TarjetaConteo valor={conteos.porRecolectar} etiqueta="Por recolectar" color="#334155" />
           <TarjetaConteo valor={conteos.recolectados} etiqueta="Recolectados" color="#7c3aed" />
-          <TarjetaConteo valor={conteos.enCamino} etiqueta="En camino" color="#f5a623" />
           <TarjetaConteo valor={conteos.entregados} etiqueta="Entregados" color="#2ec4b6" />
           <TarjetaConteo valor={conteos.incidencias} etiqueta="Incidencias" color="#f36c2e" />
         </div>
@@ -375,41 +354,10 @@ export default function ConductorPanel() {
         <section className="tarjeta">
           <div className="cabecera-tarjeta">
             <h2>Paquetes recolectados</h2>
-            <p>Ya los tenés en tu poder. Pasalos a entrega cuando salgas a ruta.</p>
-          </div>
-          <div className="cuerpo-tarjeta">
-            {recolectados.length === 0 && (
-              <p className="entrega-vacio">Todavía no recolectaste ningún paquete.</p>
-            )}
-            {recolectados.map((p) => (
-              <div className="entrega-card" key={p.id_pedido}>
-                <div className="entrega-top">
-                  <span className="codigo-tracking">#{p.id_pedido}</span>
-                  <EstadoPill estado={p.estado} />
-                </div>
-                <p className="entrega-cliente">{nombreCliente(p, clientes)}</p>
-                <p className="entrega-dir">{p.direccion}</p>
-                <div className="entrega-acciones">
-                  <button
-                    className="btn btn-ambar"
-                    onClick={() => pasarAEntrega(p)}
-                    disabled={enviandoId === p.id_pedido}
-                  >
-                    {enviandoId === p.id_pedido ? "Enviando…" : "Pasar a entrega"}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="tarjeta">
-          <div className="cabecera-tarjeta">
-            <h2>Lista de entregas</h2>
             <p>
               {optimizado
                 ? "Seguí el orden numerado para ahorrar tiempo y km."
-                : "Avanzá con la entrega o reportá una incidencia."}
+                : "Ya los tenés en tu poder. Entregalos o reportá una incidencia."}
             </p>
           </div>
           <div className="cuerpo-tarjeta">
@@ -437,15 +385,13 @@ export default function ConductorPanel() {
               <p className="aviso-banner ambar">Orden optimizado: {optimizado.length} entregas.</p>
             )}
 
-            {enRuta.length === 0 && (
-              <p className="entrega-vacio">
-                No tenés entregas en ruta. Mové un paquete recolectado a "Pasar a entrega".
-              </p>
+            {recolectados.length === 0 && (
+              <p className="entrega-vacio">Todavía no recolectaste ningún paquete.</p>
             )}
-            {enRuta
+            {recolectados
               .slice()
               .sort((a, b) => {
-                if (!optimizado) return 0;
+                if (!optimizado) return a.id_pedido - b.id_pedido;
                 return optimizado.indexOf(a.id_pedido) - optimizado.indexOf(b.id_pedido);
               })
               .map((p) => {
@@ -463,39 +409,65 @@ export default function ConductorPanel() {
                     <p className="entrega-cliente">{nombreCliente(p, clientes)}</p>
                     <p className="entrega-dir">{p.direccion}</p>
                     <div className="entrega-acciones">
-                      {p.estado === "EN_CAMINO" && (
-                        <>
-                          <button
-                            className="btn btn-verde"
-                            onClick={() => setModalEntrega({ pedido: p, modo: "entrega" })}
-                          >
-                            Marcar entregado
-                          </button>
-                          <button
-                            className="btn btn-rojo"
-                            onClick={() => setModalEntrega({ pedido: p, modo: "incidencia" })}
-                          >
-                            Incidencia
-                          </button>
-                        </>
-                      )}
-                      {p.estado === "INCIDENCIA" && (
-                        <button
-                          className="btn btn-ambar"
-                          onClick={() =>
-                            cambiarEstado(p, "EN_CAMINO", `¿Reanudar la entrega #${p.id_pedido}?`)
-                          }
-                        >
-                          Reanudar entrega
-                        </button>
-                      )}
-                      {p.estado === "ENTREGADO" && (
-                        <span className="entrega-listo">Entrega completada</span>
-                      )}
+                      <button
+                        className="btn btn-verde"
+                        onClick={() => setModalEntrega({ pedido: p, modo: "entrega" })}
+                      >
+                        Marcar entregado
+                      </button>
+                      <button
+                        className="btn btn-rojo"
+                        onClick={() => setModalEntrega({ pedido: p, modo: "incidencia" })}
+                      >
+                        Incidencia
+                      </button>
                     </div>
                   </div>
                 );
               })}
+          </div>
+        </section>
+
+        <section className="tarjeta">
+          <div className="cabecera-tarjeta">
+            <h2>Incidencias y entregas completadas</h2>
+            <p>Historial de lo que ya pasó por tu ruta.</p>
+          </div>
+          <div className="cuerpo-tarjeta">
+            {seguimiento.length === 0 && (
+              <p className="entrega-vacio">Todavía no tenés nada en seguimiento.</p>
+            )}
+            {seguimiento
+              .slice()
+              .sort((a, b) => b.id_pedido - a.id_pedido)
+              .map((p) => (
+                <div className="entrega-card" key={p.id_pedido}>
+                  <div className="entrega-top">
+                    <span className="codigo-tracking">#{p.id_pedido}</span>
+                    <EstadoPill estado={p.estado} />
+                  </div>
+                  <p className="entrega-cliente">{nombreCliente(p, clientes)}</p>
+                  <p className="entrega-dir">{p.direccion}</p>
+                  <div className="entrega-acciones">
+                    {p.estado === "INCIDENCIA" && (
+                      <button
+                        className="btn btn-ambar"
+                        onClick={() =>
+                          cambiarEstado(
+                            p,
+                            `¿Reanudar la entrega #${p.id_pedido}? Si el paquete todavía no se había recolectado, vuelve a la lista de recolecta.`,
+                          )
+                        }
+                      >
+                        Reanudar entrega
+                      </button>
+                    )}
+                    {p.estado === "ENTREGADO" && (
+                      <span className="entrega-listo">Entrega completada</span>
+                    )}
+                  </div>
+                </div>
+              ))}
           </div>
         </section>
       </main>

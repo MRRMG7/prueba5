@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS proveedores (
 -- 6. Tabla Pedidos
 -- Flujo: PENDIENTE -> ASIGNADO (admin aprueba y asigna, genera codigo)
 --   -> RECOLECTADO (conductor valida el codigo en el comercio)
---   -> EN_CAMINO (conductor lo pasa a entrega) -> ENTREGADO
+--   -> ENTREGADO
 CREATE TABLE IF NOT EXISTS pedidos (
     id_pedido INT AUTO_INCREMENT PRIMARY KEY,
     id_cliente INT NOT NULL,
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS pedidos (
     direccion TEXT NOT NULL,
     latitud DECIMAL(10, 8) NOT NULL,
     longitud DECIMAL(11, 8) NOT NULL,
-    estado ENUM('PENDIENTE', 'ASIGNADO', 'RECOLECTADO', 'EN_CAMINO', 'ENTREGADO', 'INCIDENCIA', 'CANCELADO') NOT NULL DEFAULT 'PENDIENTE',
+    estado ENUM('PENDIENTE', 'ASIGNADO', 'RECOLECTADO', 'ENTREGADO', 'INCIDENCIA', 'CANCELADO') NOT NULL DEFAULT 'PENDIENTE',
     codigo_recolecta VARCHAR(20) NULL,
     incidencia_nota TEXT NULL,
     foto_entrega VARCHAR(255) NULL,
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS pedidos (
 CREATE TABLE IF NOT EXISTS historial_pedidos (
     id_historial INT AUTO_INCREMENT PRIMARY KEY,
     id_pedido INT NOT NULL,
-    estado ENUM('PENDIENTE', 'ASIGNADO', 'RECOLECTADO', 'EN_CAMINO', 'ENTREGADO', 'INCIDENCIA', 'CANCELADO') NOT NULL,
+    estado ENUM('PENDIENTE', 'ASIGNADO', 'RECOLECTADO', 'ENTREGADO', 'INCIDENCIA', 'CANCELADO') NOT NULL,
     fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     nota TEXT NULL,
     foto VARCHAR(255) NULL,

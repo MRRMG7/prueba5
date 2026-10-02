@@ -205,7 +205,21 @@ def actualizar_pedido_completo(
     pedido = db.query(PedidoModel).filter(PedidoModel.id_pedido == id_pedido).first()
     if not pedido:
         raise HTTPException(status_code=404, detail="Pedido no encontrado")
-    
+
+    # Esta edicion completa es solo del admin (reasignar conductor/vehiculo).
+    # Asi nadie puede usar este atajo para saltarse la recolecta o la entrega.
+    if not current_user or current_user.rol != RolEnum.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo el administrador puede editar un pedido completo",
+        )
+
+    if pedido_in.estado == EstadoPedidoEnum.ENTREGADO and pedido.estado != EstadoPedidoEnum.RECOLECTADO:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Solo se puede marcar como entregado un paquete ya recolectado",
+        )
+
     estado_antes = pedido.estado
     for field, value in pedido_in.dict(exclude_unset=True, exclude={"cliente"}).items():
         setattr(pedido, field, value)
@@ -249,7 +263,6 @@ def actualizar_estado_pedido(
     if current_user and current_user.rol == RolEnum.CONDUCTOR:
         permitidos = {
             EstadoPedidoEnum.INCIDENCIA,
-            EstadoPedidoEnum.EN_CAMINO,
             EstadoPedidoEnum.ENTREGADO,
         }
         if estado_in.estado not in permitidos:
@@ -261,12 +274,12 @@ def actualizar_estado_pedido(
             if estado_in.estado != EstadoPedidoEnum.INCIDENCIA:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="El paquete debe pasar primero por la recolecta y luego por 'Pasar a entrega'",
+                    detail="El paquete tiene que estar recolectado para poder entregarlo",
                 )
-        if estado_in.estado == EstadoPedidoEnum.ENTREGADO and pedido.estado != EstadoPedidoEnum.EN_CAMINO:
+        if estado_in.estado == EstadoPedidoEnum.ENTREGADO and pedido.estado != EstadoPedidoEnum.RECOLECTADO:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Solo se puede marcar como entregado un paquete que ya salió a entrega",
+                detail="Solo se puede marcar como entregado un paquete ya recolectado",
             )
 
     nuevo_estado = estado_in.estado
@@ -388,11 +401,18 @@ def recolectar_pedido(
     db.refresh(pedido)
     return pedido
 
-def iniciar_entrega_pedido(
+def reanudar_pedido(
     id_pedido: int,
     db: Session = Depends(get_db),
     current_user: Optional[UsuarioModel] = None,
 ) -> PedidoResponse:
+    """Saca un pedido de una incidencia y lo devuelve al estado que le corresponde.
+
+    Si el paquete ya se habia recolectado, vuelve a RECOLECTADO y el conductor
+    puede entregarlo. Si la incidencia fue porque no se pudo recolectar, vuelve
+    a ASIGNADO para que tenga que validar el codigo otra vez: nunca se entrega
+    un paquete que no se haya recolectado con su codigo.
+    """
     pedido = db.query(PedidoModel).filter(PedidoModel.id_pedido == id_pedido).first()
     if not pedido:
         raise HTTPException(status_code=404, detail=f"El pedido con ID {id_pedido} no existe")
@@ -400,28 +420,45 @@ def iniciar_entrega_pedido(
     if not current_user or current_user.rol != RolEnum.CONDUCTOR:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Solo el conductor asignado puede iniciar la entrega",
+            detail="Solo el conductor asignado puede reanudar una entrega",
         )
 
     if pedido.id_conductor != current_user.id_ref:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="No tienes permiso para mover un pedido asignado a otro conductor",
+            detail="No tienes permiso para reanudar un pedido asignado a otro conductor",
         )
 
-    if pedido.estado != EstadoPedidoEnum.RECOLECTADO:
+    if pedido.estado != EstadoPedidoEnum.INCIDENCIA:
         raise HTTPException(
             status_code=400,
-            detail="Solo se pueden pasar a entrega los paquetes ya recolectados",
+            detail="Solo se pueden reanudar pedidos con incidencia",
         )
 
-    pedido.estado = EstadoPedidoEnum.EN_CAMINO
+    ya_recolectado = (
+        db.query(HistorialPedidoModel)
+        .filter(
+            HistorialPedidoModel.id_pedido == id_pedido,
+            HistorialPedidoModel.estado == EstadoPedidoEnum.RECOLECTADO,
+        )
+        .first()
+    )
+    destino = (
+        EstadoPedidoEnum.RECOLECTADO if ya_recolectado else EstadoPedidoEnum.ASIGNADO
+    )
+
+    pedido.estado = destino
+    pedido.incidencia_nota = None
     _registrar_historial(
         db,
         pedido.id_pedido,
-        EstadoPedidoEnum.EN_CAMINO,
-        nota="Paquete recolectado, sale a entrega",
-        usuario=current_user.username,
+        destino,
+        nota=(
+            "Incidencia resuelta, el paquete vuelve a estar listo para entregar"
+            if destino == EstadoPedidoEnum.RECOLECTADO
+            else "Incidencia resuelta, vuelve a la lista de recolecta"
+        ),
+        usuario=current_user.username if current_user else None,
     )
     db.commit()
     db.refresh(pedido)

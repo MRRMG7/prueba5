@@ -354,7 +354,7 @@ def get_proveedores_route(db: Session = Depends(get_db)):
 def crear_proveedor_route(
     proveedor: proveedores.ProveedorBase,
     db: Session = Depends(get_db),
-    _user=Depends(get_current_user),
+    _user=Depends(require_admin),
 ):
     resultado = proveedores.crear_proveedor(proveedor, db)
     auditoria.registrar(db, _user.username, "PROVEEDOR_CREAR", f"Proveedor {resultado.id_proveedor}: {proveedor.nombre}")
@@ -365,7 +365,7 @@ def actualizar_proveedor_route(
     id_proveedor: int,
     prov_in: proveedores.ProveedorBase,
     db: Session = Depends(get_db),
-    _user=Depends(get_current_user),
+    _user=Depends(require_admin),
 ):
     resultado = proveedores.actualizar_proveedor(id_proveedor, prov_in, db)
     auditoria.registrar(db, _user.username, "PROVEEDOR_EDITAR", f"Proveedor {id_proveedor}: {prov_in.nombre}")
@@ -375,7 +375,7 @@ def actualizar_proveedor_route(
 def eliminar_proveedor_route(
     id_proveedor: int,
     db: Session = Depends(get_db),
-    _user=Depends(get_current_user),
+    _user=Depends(require_admin),
 ):
     proveedores.eliminar_proveedor(id_proveedor, db)
     auditoria.registrar(db, _user.username, "PROVEEDOR_ELIMINAR", f"Proveedor {id_proveedor}")

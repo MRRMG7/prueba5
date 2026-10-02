@@ -6,16 +6,18 @@ import PaquetesTab from "./PaquetesTab";
 import ConductoresTab from "./ConductoresTab";
 import VehiculosTab from "./VehiculosTab";
 import ClientesTab from "./ClientesTab";
+import ProveedoresTab from "./ProveedoresTab";
 import CambiarPasswordModal from "../../components/CambiarPasswordModal";
 import MenuUsuario from "../../components/MenuUsuario";
 import AuditoriaTab from "./AuditoriaTab";
 
-type Seccion = "paquetes" | "conductores" | "vehiculos" | "clientes" | "auditoria";
+type Seccion = "paquetes" | "conductores" | "vehiculos" | "negocios" | "clientes" | "auditoria";
 
 const TITULOS: Record<Seccion, string> = {
   paquetes: "Paquetes",
   conductores: "Conductores",
   vehiculos: "Vehículos",
+  negocios: "Negocios",
   clientes: "Clientes",
   auditoria: "Auditoría",
 };
@@ -36,6 +38,14 @@ function Icono({ id }: { id: Seccion }) {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...comunes}>
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
           <circle cx="12" cy="7" r="4" />
+        </svg>
+      );
+    case "negocios":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...comunes}>
+          <path d="M3 9l1.5-5h15L21 9" />
+          <path d="M4 9h16v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" />
+          <path d="M9 13h6" />
         </svg>
       );
     case "vehiculos":
@@ -116,6 +126,7 @@ const navegacion: { id: Seccion; label: string }[] = [
     { id: "paquetes", label: "Paquetes" },
     { id: "conductores", label: "Conductores" },
     { id: "vehiculos", label: "Vehículos" },
+    { id: "negocios", label: "Negocios" },
     { id: "clientes", label: "Clientes" },
     { id: "auditoria", label: "Auditoría" },
   ];
@@ -187,6 +198,9 @@ const navegacion: { id: Seccion; label: string }[] = [
           {seccion === "conductores" && <ConductoresTab conductores={conductores} onCambio={cargar} />}
           {seccion === "vehiculos" && <VehiculosTab vehiculos={vehiculos} onCambio={cargar} />}
           {seccion === "clientes" && <ClientesTab clientes={clientes} pedidos={pedidos} onCambio={cargar} />}
+      {seccion === "negocios" && (
+        <ProveedoresTab proveedores={proveedores} onCambio={cargar} />
+      )}
           {seccion === "auditoria" && <AuditoriaTab />}
         </div>
       </main>

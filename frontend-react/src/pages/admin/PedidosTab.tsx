@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { api, nombreCliente, nombreProveedor, urlArchivo } from "../../api";
 import type { Cliente, Conductor, Pedido, Proveedor, Vehiculo } from "../../types";
 import EstadoPill from "../../components/EstadoPill";
@@ -22,22 +22,12 @@ export default function PedidosTab({ pedidos, clientes, conductores, proveedores
   const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
   const [error, setError] = useState("");
   const [guardando, setGuardando] = useState(false);
+  const [vista, setVista] = useState<"paquetes" | "recolectados">("paquetes");
 
   const porFecha = (a: Pedido, b: Pedido) => b.id_pedido - a.id_pedido;
-  const grupos = [
-    {
-      clave: "recolectados",
-      titulo: "Recolectados",
-      ayuda: "Ya están en manos del conductor, en ruta hacia la entrega.",
-      items: pedidos.filter((p) => p.estado === "RECOLECTADO").sort(porFecha),
-    },
-    {
-      clave: "normales",
-      titulo: "Paquetes",
-      ayuda: "Sin recolectar, finalizados o cancelados.",
-      items: pedidos.filter((p) => p.estado !== "RECOLECTADO").sort(porFecha),
-    },
-  ].filter((g) => g.items.length > 0);
+  const recolectados = pedidos.filter((p) => p.estado === "RECOLECTADO").sort(porFecha);
+  const normales = pedidos.filter((p) => p.estado !== "RECOLECTADO").sort(porFecha);
+  const lista = vista === "recolectados" ? recolectados : normales;
 
   useEffect(() => {
     api<Vehiculo[]>("/vehiculos").then(setVehiculos).catch(() => {});
@@ -137,6 +127,25 @@ export default function PedidosTab({ pedidos, clientes, conductores, proveedores
         <p>Asigná paquetes a conductores. El conductor actualiza el estado desde su panel.</p>
       </div>
       <div className="cuerpo-tarjeta">
+        <div className="pestanas">
+          <button
+            type="button"
+            className={"pestana" + (vista === "paquetes" ? " activa" : "")}
+            onClick={() => setVista("paquetes")}
+          >
+            Paquetes
+            <span className="pestana-conteo">{normales.length}</span>
+          </button>
+          <button
+            type="button"
+            className={"pestana" + (vista === "recolectados" ? " activa" : "")}
+            onClick={() => setVista("recolectados")}
+          >
+            Recolectados
+            <span className="pestana-conteo">{recolectados.length}</span>
+          </button>
+        </div>
+
         <div className="overflow">
           <table className="tabla">
             <thead>
@@ -153,24 +162,17 @@ export default function PedidosTab({ pedidos, clientes, conductores, proveedores
               </tr>
             </thead>
             <tbody>
-              {pedidos.length === 0 && (
+              {lista.length === 0 && (
                 <tr>
                   <td colSpan={9} className="celda-suave" style={{ textAlign: "center", padding: "28px 12px" }}>
-                    No hay pedidos.
+                    {vista === "recolectados"
+                      ? "No hay paquetes recolectados."
+                      : "No hay paquetes."}
                   </td>
                 </tr>
               )}
-              {grupos.map((g) => (
-                <Fragment key={g.clave}>
-                  <tr className="fila-grupo">
-                    <th colSpan={9} scope="colgroup">
-                      <span className="grupo-titulo">{g.titulo}</span>
-                      <span className="grupo-conteo">{g.items.length}</span>
-                      <span className="grupo-ayuda">{g.ayuda}</span>
-                    </th>
-                  </tr>
-                  {g.items.map((p) => (
-                    <tr key={p.id_pedido}>
+              {lista.map((p) => (
+                <tr key={p.id_pedido}>
                   <td>
                     <span className="codigo-tracking">#{p.id_pedido}</span>
                   </td>
@@ -234,8 +236,6 @@ export default function PedidosTab({ pedidos, clientes, conductores, proveedores
                   </td>
                 </tr>
                   ))}
-                </Fragment>
-              ))}
             </tbody>
           </table>
         </div>

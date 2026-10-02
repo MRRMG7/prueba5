@@ -14,10 +14,10 @@
   --teal: #2ec4b6;
   --amber: #f5a623;
   --rojo: #ef4b4b;
-  --radio-s: 8px;
-  --radio-m: 12px;
-  --fuente-display: "Space Grotesk", "Inter", system-ui, sans-serif;
-  --fuente: "Inter", system-ui, sans-serif;
+  --radio-s: 3px;
+  --radio-m: 4px;
+  --fuente: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --fuente-display: var(--fuente);
 }
 
 :root[data-tema="noche"] {
@@ -58,9 +58,7 @@ input, select, textarea { font-family: inherit; }
 }
 
 .panel-marca {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1.4px),
-    linear-gradient(180deg, var(--noche-900) 0%, var(--noche-800) 100%);
-  background-size: 26px 26px, 100% 100%;
+  background: var(--noche-900);
   color: #eef3f6;
   padding: 56px 56px 40px;
   display: flex;
@@ -74,7 +72,7 @@ input, select, textarea { font-family: inherit; }
 .marca-icono {
   display: inline-flex;
   width: 34px; height: 34px;
-  border-radius: 8px;
+  border-radius: 4px;
   background: rgba(255, 255, 255, 0.06);
   align-items: center;
   justify-content: center;
@@ -88,7 +86,7 @@ input, select, textarea { font-family: inherit; }
 .marca-icono circle {
   transform-origin: center;
   transform-box: fill-box;
-  animation: latido-punto 2s ease-in-out infinite;
+  animation: pulso-logo 2s ease-in-out infinite;
 }
 
 .marca-icono circle:nth-of-type(2) { animation-delay: .3s; }
@@ -97,26 +95,25 @@ input, select, textarea { font-family: inherit; }
   to { stroke-dashoffset: -22; }
 }
 
-@keyframes latido-punto {
+@keyframes pulso-logo {
   0%, 100% { opacity: .5; transform: scale(1); }
   50% { opacity: 1; transform: scale(1.2); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .marca-icono path, .marca-icono circle,
-  .ruta-animada .linea-flujo,
-  .ruta-animada .nodo, .ruta-animada .nodo-fuera,
-  .etiqueta-ruta.recolectado { animation: none; }
+  .marca-icono path,
+  .marca-icono circle,
+  .paso-punto { animation: none; }
 }
 
 .marca-texto { font-family: var(--fuente-display); font-weight: 600; font-size: 16px; }
 
 .titular {
-  font-size: clamp(32px, 3.4vw, 44px);
-  line-height: 1.12;
+  font-size: 36px;
+  line-height: 1.2;
   font-weight: 600;
   color: #fff;
-  max-width: 11ch;
+  max-width: 16ch;
 }
 
 .subtitular { margin-top: 20px; max-width: 38ch; color: #aab8c4; font-size: 15px; line-height: 1.6; }
@@ -153,34 +150,21 @@ input, select, textarea { font-family: inherit; }
   opacity: 0.95;
   fill: none;
   stroke-linecap: round;
-  stroke-dasharray: 18 640;
-  animation: avanzar-ruta 2.6s linear infinite;
 }
 
-@keyframes avanzar-ruta {
-  to { stroke-dashoffset: -658; }
-}
-
-/* nodos naranjas / aqua con pulso sutil */
+/* nodos de la ruta */
 .ruta-animada .nodo, .ruta-animada .nodo-fuera {
-  transform-origin: center;
-  transform-box: fill-box;
-  animation: brillo-nodo 2.2s ease-in-out infinite;
+  opacity: 0.92;
 }
 
-@keyframes brillo-nodo {
-  0%, 100% { opacity: 0.75; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.16); }
-}
-
-/* etiquetas flotantes */
+/* etiquetas de la ruta */
 .etiqueta-ruta {
   position: absolute;
   font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.02em;
   padding: 5px 10px;
-  border-radius: 999px;
+  border-radius: 4px;
   white-space: nowrap;
   pointer-events: none;
 }
@@ -192,7 +176,6 @@ input, select, textarea { font-family: inherit; }
   background: rgba(124, 58, 237, 0.16);
   border: 1px solid rgba(124, 58, 237, 0.42);
   transform: translate(-50%, -100%);
-  animation: flotar-recolectado 2.4s ease-in-out infinite;
 }
 
 .etiqueta-ruta.entregado {
@@ -204,20 +187,13 @@ input, select, textarea { font-family: inherit; }
   transform: translate(-50%, -150%);
 }
 
-@keyframes flotar-recolectado {
-  0%, 100% { transform: translate(-50%, -100%); }
-  50% { transform: translate(-50%, calc(-100% - 7px)); }
-}
-
 /* =========================================================
    PÁGINA DE INICIO (landing + rastreo público)
    ========================================================= */
 .inicio { min-height: 100dvh; background: var(--papel-100); }
 
 .inicio-hero {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1.4px),
-    linear-gradient(180deg, var(--noche-900) 0%, var(--noche-800) 100%);
-  background-size: 26px 26px, 100% 100%;
+  background: var(--noche-900);
   color: #eef3f6;
   padding: 34px 24px 72px;
 }
@@ -235,7 +211,7 @@ input, select, textarea { font-family: inherit; }
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.18);
   color: #eef3f6;
-  border-radius: 999px;
+  border-radius: 4px;
   padding: 9px 20px;
   font-size: 13px;
   font-weight: 600;
@@ -256,11 +232,11 @@ input, select, textarea { font-family: inherit; }
 }
 
 .inicio-titular {
-  font-size: clamp(30px, 3.2vw, 44px);
-  line-height: 1.12;
+  font-size: 32px;
+  line-height: 1.2;
   font-weight: 600;
   color: #fff;
-  max-width: 14ch;
+  max-width: 20ch;
 }
 
 .inicio-sub {
@@ -275,7 +251,7 @@ input, select, textarea { font-family: inherit; }
 
 .inicio-busqueda-card {
   background: var(--superficie);
-  border-radius: 18px;
+  border-radius: 4px;
   padding: 26px;
   box-shadow: 0 18px 40px rgba(8, 24, 38, 0.28);
 }
@@ -314,7 +290,7 @@ input, select, textarea { font-family: inherit; }
   margin-bottom: 14px;
   padding: 9px 12px;
   border: 1px solid var(--linea-borde);
-  border-radius: 8px;
+  border-radius: 4px;
   background: transparent;
   color: var(--tinta-900);
   font-size: 13.5px;
@@ -332,7 +308,7 @@ input, select, textarea { font-family: inherit; }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-radius: 10px;
+  border-radius: 4px;
   padding: 13px 16px;
   margin-bottom: 18px;
 }
@@ -377,6 +353,11 @@ input, select, textarea { font-family: inherit; }
   animation: latido-punto 2s ease-in-out infinite;
 }
 
+@keyframes latido-punto {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .6; transform: scale(1.12); }
+}
+
 .paso-etiqueta {
   font-size: 11px;
   font-weight: 500;
@@ -410,7 +391,7 @@ input, select, textarea { font-family: inherit; }
 
 .inicio-mapa {
   height: 240px;
-  border-radius: 12px;
+  border-radius: 4px;
   overflow: hidden;
   border: 1px solid var(--linea-borde);
 }
@@ -435,7 +416,7 @@ input, select, textarea { font-family: inherit; }
 .inicio-tarjeta {
   background: var(--superficie);
   border: 1px solid var(--linea-borde);
-  border-radius: 14px;
+  border-radius: 4px;
   padding: 22px;
 }
 
@@ -464,7 +445,7 @@ input, select, textarea { font-family: inherit; }
   color: var(--teal);
   border: 1px solid rgba(46, 196, 182, 0.4);
   background: rgba(46, 196, 182, 0.1);
-  border-radius: 999px;
+  border-radius: 4px;
   padding: 4px 12px;
   white-space: nowrap;
 }
@@ -538,7 +519,7 @@ input, select, textarea { font-family: inherit; }
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: transparent;
   color: #eef3f6;
-  border-radius: 999px;
+  border-radius: 4px;
   padding: 7px 16px;
   font-size: 12.5px;
   font-weight: 600;
@@ -567,7 +548,7 @@ input, select, textarea { font-family: inherit; }
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
 }
 
-.avatar:hover { transform: scale(1.06); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); }
+.avatar:hover { border-color: rgba(255, 255, 255, 0.95); }
 
 .avatar-con-foto { border: 2px solid #fff; overflow: hidden; padding: 0; }
 .avatar-con-foto img,
@@ -580,7 +561,7 @@ input, select, textarea { font-family: inherit; }
   min-width: 240px;
   background: #fff;
   border: 1px solid var(--linea-borde);
-  border-radius: 12px;
+  border-radius: 4px;
   box-shadow: 0 12px 32px rgba(15, 23, 42, 0.16);
   padding: 8px;
   z-index: 60;
@@ -626,7 +607,7 @@ input, select, textarea { font-family: inherit; }
   font-size: 13.5px;
   font-weight: 500;
   padding: 9px 10px;
-  border-radius: 8px;
+  border-radius: 4px;
   cursor: pointer;
   transition: background .12s;
 }
@@ -653,7 +634,7 @@ input, select, textarea { font-family: inherit; }
 .entrega-card {
   background: var(--superficie);
   border: 1px solid var(--linea-borde);
-  border-radius: 12px;
+  border-radius: 4px;
   padding: 15px 18px;
 }
 
@@ -673,7 +654,7 @@ input, select, textarea { font-family: inherit; }
   color: #0b8378;
   background: rgba(46, 196, 182, 0.12);
   border: 1px solid rgba(46, 196, 182, 0.35);
-  border-radius: 999px;
+  border-radius: 4px;
   padding: 6px 14px;
 }
 
@@ -733,7 +714,7 @@ input, select, textarea { font-family: inherit; }
   font-size: 12.5px;
   background: rgba(239, 75, 75, .1);
   border: 1px solid rgba(239, 75, 75, .3);
-  border-radius: 8px;
+  border-radius: 4px;
   padding: 10px 12px;
 }
 
@@ -743,7 +724,7 @@ input, select, textarea { font-family: inherit; }
   font-size: 12.5px;
   background: rgba(46, 196, 182, .1);
   border: 1px solid rgba(46, 196, 182, .35);
-  border-radius: 8px;
+  border-radius: 4px;
   padding: 10px 12px;
 }
 
@@ -783,7 +764,7 @@ input, select, textarea { font-family: inherit; }
   align-items: center;
   gap: 11px;
   padding: 10px 12px;
-  border-radius: 9px;
+  border-radius: 4px;
   border: none;
   background: transparent;
   color: #aab8c4;
@@ -810,7 +791,7 @@ input, select, textarea { font-family: inherit; }
   border: 1px solid rgba(255, 255, 255, .14);
   background: transparent;
   color: #aab8c4;
-  border-radius: 8px;
+  border-radius: 4px;
   padding: 9px 12px;
   font-size: 13px;
   font-weight: 500;
@@ -832,7 +813,7 @@ input, select, textarea { font-family: inherit; }
   color: var(--teal);
   border: 1px solid rgba(46, 196, 182, .4);
   background: rgba(46, 196, 182, .08);
-  border-radius: 999px;
+  border-radius: 4px;
   padding: 4px 12px;
 }
 .panel-top .salir { margin-left: auto; }
@@ -867,7 +848,7 @@ input, select, textarea { font-family: inherit; }
   border-radius: var(--radio-m);
   padding: 12px 14px 12px;
   overflow: hidden;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  transition: border-color 0.12s ease;
 }
 .conteo-tarjeta::before {
   content: "";
@@ -880,14 +861,12 @@ input, select, textarea { font-family: inherit; }
   opacity: 0.9;
 }
 .conteo-tarjeta:hover {
-  transform: translateY(-2px);
   border-color: var(--accio);
-  box-shadow: 0 6px 14px rgb(0 0 0 / 0.08);
 }
 .conteo-tarjeta .conteo-punto {
   width: 10px;
   height: 10px;
-  border-radius: 999px;
+  border-radius: 4px;
   background: var(--accio);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--accio) 18%, transparent);
   margin-bottom: 4px;
@@ -929,7 +908,7 @@ input, select, textarea { font-family: inherit; }
   color: #134e4a;
   background: rgba(46, 196, 182, 0.1);
   border: 1px solid rgba(46, 196, 182, 0.28);
-  border-radius: 999px;
+  border-radius: 4px;
   padding: 2px 10px;
   white-space: nowrap;
 }
@@ -963,7 +942,7 @@ input, select, textarea { font-family: inherit; }
 .pill {
   display: inline-flex;
   align-items: center;
-  border-radius: 999px;
+  border-radius: 4px;
   padding: 3px 10px;
   font-size: 11.5px;
   font-weight: 600;
@@ -989,7 +968,7 @@ input, select, textarea { font-family: inherit; }
   display: flex;
   align-items: center;
   gap: 8px;
-  border-radius: 8px;
+  border-radius: 4px;
   padding: 8px 12px;
   font-size: 12.5px;
   font-weight: 500;
@@ -999,7 +978,7 @@ input, select, textarea { font-family: inherit; }
 .aviso-banner.verde { background: rgba(46, 196, 182, .12); color: #0b8378; border: 1px solid rgba(46, 196, 182, .35); }
 .aviso-banner.rojo { background: rgba(239, 75, 75, .12); color: #c23333; border: 1px solid rgba(239, 75, 75, .35); }
 
-.mapa-wrap { border: 1px solid var(--linea-borde); border-radius: 10px; overflow: hidden; }
+.mapa-wrap { border: 1px solid var(--linea-borde); border-radius: 4px; overflow: hidden; }
 
 /* =========================================================
    BOTÓN DE TEMA DÍA/NOCHE
@@ -1011,7 +990,7 @@ input, select, textarea { font-family: inherit; }
   z-index: 200;
   width: 46px;
   height: 46px;
-  border-radius: 999px;
+  border-radius: 4px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1022,7 +1001,7 @@ input, select, textarea { font-family: inherit; }
   cursor: pointer;
   transition: background .15s, transform .15s;
 }
-.boton-tema:hover { background: var(--papel-100); transform: translateY(-2px); }
+.boton-tema:hover { background: var(--papel-100); }
 .boton-tema svg { width: 20px; height: 20px; }
 
 /* Auxiliares adaptables usadas en formularios/modal */
@@ -1084,7 +1063,7 @@ input, select, textarea { font-family: inherit; }
 }
 .modal-caja {
   background: var(--superficie);
-  border-radius: 16px;
+  border-radius: 4px;
   width: 100%;
   max-width: 480px;
   max-height: 90dvh;
@@ -1107,7 +1086,7 @@ input, select, textarea { font-family: inherit; }
   color: var(--tinta-500);
   width: 32px;
   height: 32px;
-  border-radius: 999px;
+  border-radius: 4px;
   font-size: 14px;
   display: inline-flex;
   align-items: center;
@@ -1118,7 +1097,7 @@ input, select, textarea { font-family: inherit; }
   display: flex;
   gap: 6px;
   background: var(--papel-100);
-  border-radius: 10px;
+  border-radius: 4px;
   padding: 4px;
   margin-bottom: 16px;
 }
@@ -1130,7 +1109,7 @@ input, select, textarea { font-family: inherit; }
   font-size: 13px;
   font-weight: 600;
   padding: 8px 10px;
-  border-radius: 8px;
+  border-radius: 4px;
 }
 .modal-pestana.activa {
   background: var(--superficie);
@@ -1246,7 +1225,7 @@ input, select, textarea { font-family: inherit; }
 .inicio-h-punto {
   width: 11px;
   height: 11px;
-  border-radius: 999px;
+  border-radius: 4px;
   flex: none;
   box-shadow: 0 0 0 4px var(--papel-100);
 }
@@ -1313,7 +1292,7 @@ input, select, textarea { font-family: inherit; }
 }
 .evidencia-caja {
   background: var(--superficie);
-  border-radius: 14px;
+  border-radius: 4px;
   max-width: 560px;
   width: 100%;
   padding: 14px;
@@ -1378,7 +1357,7 @@ input, select, textarea { font-family: inherit; }
   max-width: 42px;
   min-height: 4px;
   background: linear-gradient(180deg, var(--teal), #187e76);
-  border-radius: 6px 6px 2px 2px;
+  border-radius: 4px 4px 0 0;
   transition: height .3s ease;
 }
 .grafico-barra-etiqueta {
@@ -1414,7 +1393,7 @@ input, select, textarea { font-family: inherit; }
   place-items: center;
   width: 26px;
   height: 26px;
-  border-radius: 999px;
+  border-radius: 4px;
   background: var(--teal);
   color: #fff;
   font-size: 13px;
@@ -1440,7 +1419,7 @@ input, select, textarea { font-family: inherit; }
   font-size: 12px;
   font-weight: 600;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: 4px;
   white-space: nowrap;
 }
 

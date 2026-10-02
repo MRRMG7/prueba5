@@ -14,6 +14,7 @@
   --teal: #475569;
   --verde: #16a34a;
   --amber: #f5a623;
+  --amber-tenue: rgba(245, 166, 35, 0.07);
   --rojo: #ef4b4b;
   --radio-s: 3px;
   --radio-m: 4px;
@@ -35,6 +36,7 @@
   --teal: #94a3b8;
   --verde: #22c55e;
   --amber: #f8b043;
+  --amber-tenue: rgba(248, 176, 67, 0.09);
   --rojo: #f25a5a;
   color-scheme: dark;
 }
@@ -245,6 +247,7 @@ transform: translate(-50%, -150%);
   margin: 0 auto;
   padding: 40px 24px;
   border-top: 1px solid var(--linea-borde);
+  background: var(--amber-tenue);
 }
 
 .inicio-info h2 {
@@ -270,7 +273,7 @@ transform: translate(-50%, -150%);
 }
 
 .inicio-info-lista > div {
-  border-top: 1px solid var(--linea-borde);
+  border-top: 2px solid var(--amber);
   padding-top: 12px;
 }
 
@@ -358,7 +361,7 @@ transform: translate(-50%, -150%);
 
 .paso:first-child::before { display: none; }
 
-.paso.hecho::before { background: var(--teal); }
+.paso.hecho::before { background: var(--amber); }
 
 .paso-punto {
   width: 22px;
@@ -371,12 +374,14 @@ transform: translate(-50%, -150%);
 }
 
 .paso.hecho .paso-punto {
-  background: var(--teal);
-  border-color: var(--teal);
-  box-shadow: 0 0 0 4px rgba(71, 85, 105, 0.14);
+  background: var(--amber);
+  border-color: var(--amber);
+  box-shadow: 0 0 0 4px rgba(245, 166, 35, 0.16);
 }
 
 .paso.activo .paso-punto {
+  background: var(--amber);
+  border-color: var(--amber);
   animation: latido-punto 2s ease-in-out infinite;
 }
 

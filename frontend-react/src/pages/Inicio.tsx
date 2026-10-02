@@ -244,6 +244,39 @@ export default function Inicio({ onEntrar }: Props) {
             )}
           </div>
 
+      <section className="inicio-info">
+        <h2>Qué hacemos</h2>
+        <p className="inicio-info-intro">
+          Recogida y entrega puerta a puerta en El Salvador. Conectamos a comercios y personas con
+          el motorista correcto, y le damos a cada entrega un número para seguirla de principio a
+          fin.
+        </p>
+
+        <dl className="inicio-info-lista">
+          <div>
+            <dt>Recogida y entrega en el día</dt>
+            <dd>
+              Tu paquete se recoge en el origen y llega puerta a puerta con un repartidor
+              asignado desde el inicio.
+            </dd>
+          </div>
+          <div>
+            <dt>Seguimiento en cada etapa</dt>
+            <dd>
+              Con tu número de seguimiento ves la línea de tiempo y el punto de entrega en el
+              mapa, sin necesidad de crear cuenta.
+            </dd>
+          </div>
+          <div>
+            <dt>Un solo panel para tu empresa</dt>
+            <dd>
+              Administradores y conductores coordinan paquetes, vehículos y repartos desde un
+              mismo lugar.
+            </dd>
+          </div>
+        </dl>
+      </section>
+
       {evidencia && (
         <EvidenciaModal
           url={evidencia}

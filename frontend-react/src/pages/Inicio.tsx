@@ -118,21 +118,10 @@ export default function Inicio({ onEntrar }: Props) {
         </button>
       </div>
 
-      <section className="inicio-portada">
-        <h1 className="inicio-portada-titulo">Rastreá tu pedido</h1>
-        <p className="inicio-portada-sub">
-          Escribí el número de seguimiento. No necesitás cuenta.
-        </p>
-
-        <div className="inicio-busqueda-card">
-            <h2>Rastreá tu pedido</h2>
-            <p className="inicio-busqueda-sub">
-              Ingresá tu número de seguimiento para ver por dónde va.
-            </p>
-
-            <form onSubmit={buscar} className="buscar-form">
-              <input
-                value={busqueda}
+      <div className="inicio-buscador">
+        <form onSubmit={buscar} className="buscar-form">
+          <input
+            value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
                 placeholder="Nº de seguimiento (ej. 1 o #1)"
               />
@@ -254,38 +243,6 @@ export default function Inicio({ onEntrar }: Props) {
               </div>
             )}
           </div>
-      </section>
-
-      <ol className="inicio-estados">
-        <li className="inicio-estado">
-          <span className="inicio-estado-cab">
-            <span className="inicio-estado-punto" style={{ background: "#64748b" }} />
-            Pendiente
-          </span>
-          <p>El pedido está cargado y todavía sin conductor asignado.</p>
-        </li>
-        <li className="inicio-estado">
-          <span className="inicio-estado-cab">
-            <span className="inicio-estado-punto" style={{ background: "#334155" }} />
-            Asignado
-          </span>
-          <p>Un conductor lo tiene asignado y va en camino a recogerlo.</p>
-        </li>
-        <li className="inicio-estado">
-          <span className="inicio-estado-cab">
-            <span className="inicio-estado-punto" style={{ background: "#7c3aed" }} />
-            Recolectado
-          </span>
-          <p>Ya está en manos del conductor, en ruta hacia la entrega.</p>
-        </li>
-        <li className="inicio-estado">
-          <span className="inicio-estado-cab">
-            <span className="inicio-estado-punto" style={{ background: "#16a34a" }} />
-            Entregado
-          </span>
-          <p>Entregado en destino. El historial queda disponible para consultar.</p>
-        </li>
-      </ol>
 
       {evidencia && (
         <EvidenciaModal
@@ -296,10 +253,7 @@ export default function Inicio({ onEntrar }: Props) {
       )}
 
       <footer className="inicio-pie">
-        <p>Sistema de Gestión de Transporte y Entregas · El Salvador</p>
-        <button type="button" className="link-suave" onClick={onEntrar}>
-          Acceso
-        </button>
+        <span>Transporte &amp; Entregas</span>
       </footer>
     </main>
   );

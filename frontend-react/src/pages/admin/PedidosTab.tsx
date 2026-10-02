@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { api, nombreCliente, nombreProveedor, urlArchivo } from "../../api";
 import type { Cliente, Conductor, Pedido, Proveedor, Vehiculo } from "../../types";
 import EstadoPill from "../../components/EstadoPill";
@@ -22,7 +22,22 @@ export default function PedidosTab({ pedidos, clientes, conductores, proveedores
   const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
   const [error, setError] = useState("");
   const [guardando, setGuardando] = useState(false);
-  const lista = [...pedidos].sort((a, b) => b.id_pedido - a.id_pedido);
+
+  const porFecha = (a: Pedido, b: Pedido) => b.id_pedido - a.id_pedido;
+  const grupos = [
+    {
+      clave: "recolectados",
+      titulo: "Recolectados",
+      ayuda: "Ya están en manos del conductor, en ruta hacia la entrega.",
+      items: pedidos.filter((p) => p.estado === "RECOLECTADO").sort(porFecha),
+    },
+    {
+      clave: "normales",
+      titulo: "Paquetes",
+      ayuda: "Sin recolectar, finalizados o cancelados.",
+      items: pedidos.filter((p) => p.estado !== "RECOLECTADO").sort(porFecha),
+    },
+  ].filter((g) => g.items.length > 0);
 
   useEffect(() => {
     api<Vehiculo[]>("/vehiculos").then(setVehiculos).catch(() => {});
@@ -138,15 +153,24 @@ export default function PedidosTab({ pedidos, clientes, conductores, proveedores
               </tr>
             </thead>
             <tbody>
-              {lista.length === 0 && (
+              {pedidos.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="celda-suave" style={{ textAlign: "center", padding: "28px 12px" }}>
+                  <td colSpan={9} className="celda-suave" style={{ textAlign: "center", padding: "28px 12px" }}>
                     No hay pedidos.
                   </td>
                 </tr>
               )}
-              {lista.map((p) => (
-                <tr key={p.id_pedido}>
+              {grupos.map((g) => (
+                <Fragment key={g.clave}>
+                  <tr className="fila-grupo">
+                    <th colSpan={9} scope="colgroup">
+                      <span className="grupo-titulo">{g.titulo}</span>
+                      <span className="grupo-conteo">{g.items.length}</span>
+                      <span className="grupo-ayuda">{g.ayuda}</span>
+                    </th>
+                  </tr>
+                  {g.items.map((p) => (
+                    <tr key={p.id_pedido}>
                   <td>
                     <span className="codigo-tracking">#{p.id_pedido}</span>
                   </td>
@@ -209,6 +233,8 @@ export default function PedidosTab({ pedidos, clientes, conductores, proveedores
                     </div>
                   </td>
                 </tr>
+                  ))}
+                </Fragment>
               ))}
             </tbody>
           </table>

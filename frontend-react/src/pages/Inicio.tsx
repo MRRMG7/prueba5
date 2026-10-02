@@ -141,14 +141,14 @@ export default function Inicio({ onEntrar }: Props) {
                   className="linea-flujo"
                   d="M 60 180 C 150 70, 250 190, 330 120 C 400 60, 500 170, 590 60"
                 />
-                <circle className="nodo-fuera" cx="60" cy="180" r="15" fill="rgba(245,166,35,.18)" />
-                <circle className="nodo" cx="60" cy="180" r="10" fill="#f5a623" />
-                <circle className="nodo-fuera" cx="330" cy="120" r="15" fill="rgba(245,166,35,.18)" />
-                <circle className="nodo" cx="330" cy="120" r="10" fill="#f5a623" />
+                <circle className="nodo-fuera" cx="60" cy="180" r="15" fill="rgba(124,58,237,.20)" />
+                <circle className="nodo" cx="60" cy="180" r="10" fill="#7c3aed" />
+                <circle className="nodo-fuera" cx="330" cy="120" r="15" fill="rgba(124,58,237,.20)" />
+                <circle className="nodo" cx="330" cy="120" r="10" fill="#7c3aed" />
                 <circle cx="590" cy="60" r="14" fill="rgba(46,196,182,.16)" />
                 <circle className="nodo" cx="590" cy="60" r="10" fill="#2ec4b6" />
               </svg>
-              <span className="etiqueta-ruta camino">En camino</span>
+              <span className="etiqueta-ruta recolectado">Recolectado</span>
               <span className="etiqueta-ruta entregado">Entregado</span>
             </div>
           </div>

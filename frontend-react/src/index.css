@@ -106,7 +106,7 @@ input, select, textarea { font-family: inherit; }
   .marca-icono path, .marca-icono circle,
   .ruta-animada .linea-flujo,
   .ruta-animada .nodo, .ruta-animada .nodo-fuera,
-  .etiqueta-ruta.camino { animation: none; }
+  .etiqueta-ruta.recolectado { animation: none; }
 }
 
 .marca-texto { font-family: var(--fuente-display); font-weight: 600; font-size: 16px; }
@@ -185,14 +185,14 @@ input, select, textarea { font-family: inherit; }
   pointer-events: none;
 }
 
-.etiqueta-ruta.camino {
+.etiqueta-ruta.recolectado {
   left: 51%;
   top: 40%;
-  color: #ffd98a;
-  background: rgba(245, 166, 35, 0.14);
-  border: 1px solid rgba(245, 166, 35, 0.38);
+  color: #d8c2fb;
+  background: rgba(124, 58, 237, 0.16);
+  border: 1px solid rgba(124, 58, 237, 0.42);
   transform: translate(-50%, -100%);
-  animation: flotar-camino 2.4s ease-in-out infinite;
+  animation: flotar-recolectado 2.4s ease-in-out infinite;
 }
 
 .etiqueta-ruta.entregado {
@@ -204,7 +204,7 @@ input, select, textarea { font-family: inherit; }
   transform: translate(-50%, -150%);
 }
 
-@keyframes flotar-camino {
+@keyframes flotar-recolectado {
   0%, 100% { transform: translate(-50%, -100%); }
   50% { transform: translate(-50%, calc(-100% - 7px)); }
 }

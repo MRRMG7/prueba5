@@ -9,6 +9,7 @@ export default function CambiarPasswordModal({
 }) {
   const [actual, setActual] = useState("");
   const [nueva, setNueva] = useState("");
+  const [confirmacion, setConfirmacion] = useState("");
   const [error, setError] = useState("");
   const [exito, setExito] = useState(false);
   const [cargando, setCargando] = useState(false);
@@ -17,15 +18,11 @@ export default function CambiarPasswordModal({
     e.preventDefault();
     setError("");
     if (!actual || !nueva) {
-      setError("Completá los dos campos.");
+      setError("Completá la contraseña actual y la nueva.");
       return;
     }
-    if (nueva === actual) {
-      setError("La nueva contraseña es igual a la actual.");
-      return;
-    }
-    if (nueva.length < 4) {
-      setError("La nueva contraseña necesita al menos 4 caracteres.");
+    if (nueva !== confirmacion) {
+      setError("La nueva contraseña y su confirmación no coinciden.");
       return;
     }
     setCargando(true);
@@ -46,7 +43,10 @@ export default function CambiarPasswordModal({
     <div className="modal-fondo" onClick={onCerrar}>
       <div className="modal-caja" onClick={(e) => e.stopPropagation()}>
         <div className="modal-cabecera">
-          <h3 className="modal-titulo">Cambiar contraseña</h3>
+          <div>
+            <h3 className="modal-titulo">Cambiar contraseña</h3>
+            <p className="modal-sub">Actualizá la clave con la que entrás al sistema.</p>
+          </div>
           <button type="button" className="modal-cerrar" onClick={onCerrar} aria-label="Cerrar">
             ✕
           </button>
@@ -54,7 +54,7 @@ export default function CambiarPasswordModal({
 
         {exito ? (
           <>
-            <p className="ok-login">Contraseña actualizada.</p>
+            <p className="ok-login">Contraseña actualizada correctamente.</p>
             <div className="modal-pie">
               <button type="button" className="btn btn-verde" onClick={onCerrar}>
                 Listo
@@ -78,6 +78,16 @@ export default function CambiarPasswordModal({
                 type="password"
                 value={nueva}
                 onChange={(e) => setNueva(e.target.value)}
+                placeholder="Mínimo 4 caracteres"
+                autoComplete="new-password"
+              />
+            </label>
+            <label className="campo">
+              <span>Confirmar nueva contraseña</span>
+              <input
+                type="password"
+                value={confirmacion}
+                onChange={(e) => setConfirmacion(e.target.value)}
                 autoComplete="new-password"
               />
             </label>
@@ -89,7 +99,7 @@ export default function CambiarPasswordModal({
                 Cancelar
               </button>
               <button type="submit" className="btn btn-verde" disabled={cargando}>
-                {cargando ? "Guardando…" : "Cambiar"}
+                {cargando ? "Guardando…" : "Guardar"}
               </button>
             </div>
           </form>

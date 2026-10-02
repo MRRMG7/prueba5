@@ -33,14 +33,6 @@ class RegistroProveedor(BaseModel):
     username: str
     password: str
 
-class RegistroConductor(BaseModel):
-    nombre: str
-    licencia: str
-    telefono: str
-    email: Optional[str] = None
-    username: str
-    password: str
-
 class CambiarPassword(BaseModel):
     password_actual: str
     password_nueva: str

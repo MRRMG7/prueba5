@@ -102,58 +102,29 @@ export default function Inicio({ onEntrar }: Props) {
 
   return (
     <main className="inicio">
-      <header className="inicio-hero">
-        <div className="inicio-top">
-          <div className="marca">
-            <span className="marca-icono" aria-hidden="true">
-              <svg viewBox="0 0 32 32" width="22" height="22">
-                <path d="M4 20 C 9 8, 18 22, 28 6" fill="none" stroke="#94a3b8" strokeWidth="2.6" strokeLinecap="round" />
-                <circle cx="4" cy="20" r="3" fill="#f5a623" />
-                <circle cx="28" cy="6" r="3" fill="#f5a623" />
-              </svg>
-            </span>
-            <span className="marca-texto">Transporte &amp; Entregas</span>
-          </div>
-          <button type="button" className="inicio-btn-acceso" onClick={onEntrar}>
-            Acceso · Iniciar sesión
-          </button>
+      <div className="inicio-cabecera">
+        <div className="marca">
+          <span className="marca-icono" aria-hidden="true">
+            <svg viewBox="0 0 32 32" width="22" height="22">
+              <path d="M4 20 C 9 8, 18 22, 28 6" fill="none" stroke="#475569" strokeWidth="2.6" strokeLinecap="round" />
+              <circle cx="4" cy="20" r="3" fill="#f5a623" />
+              <circle cx="28" cy="6" r="3" fill="#f5a623" />
+            </svg>
+          </span>
+          <span className="marca-texto inicio-marca-texto">Transporte &amp; Entregas</span>
         </div>
+        <button type="button" className="inicio-btn-acceso" onClick={onEntrar}>
+          Acceso · Iniciar sesión
+        </button>
+      </div>
 
-        <div className="inicio-hero-cuerpo">
-          <div>
-            <h1 className="inicio-titular">
-              Cada pedido,
-              <br />
-              visible en su ruta.
-            </h1>
-            <p className="inicio-sub">
-              Recogida y entrega puerta a puerta en El Salvador. Escribí tu número de
-              seguimiento y enterate por dónde va tu entrega, en cada etapa.
-            </p>
+      <section className="inicio-portada">
+        <h1 className="inicio-portada-titulo">Rastreá tu pedido</h1>
+        <p className="inicio-portada-sub">
+          Escribí el número de seguimiento. No necesitás cuenta.
+        </p>
 
-            <div className="ruta-animada inicio-ruta" aria-hidden="true">
-              <svg viewBox="0 0 640 300" fill="none">
-                <path
-                  className="linea-base"
-                  d="M 60 180 C 150 70, 250 190, 330 120 C 400 60, 500 170, 590 60"
-                />
-                <path
-                  className="linea-flujo"
-                  d="M 60 180 C 150 70, 250 190, 330 120 C 400 60, 500 170, 590 60"
-                />
-                <circle className="nodo-fuera" cx="60" cy="180" r="15" fill="rgba(124,58,237,.20)" />
-                <circle className="nodo" cx="60" cy="180" r="10" fill="#7c3aed" />
-                <circle className="nodo-fuera" cx="330" cy="120" r="15" fill="rgba(124,58,237,.20)" />
-                <circle className="nodo" cx="330" cy="120" r="10" fill="#7c3aed" />
-                <circle cx="590" cy="60" r="14" fill="rgba(71,85,105,.18)" />
-                <circle className="nodo" cx="590" cy="60" r="10" fill="#64748b" />
-              </svg>
-              <span className="etiqueta-ruta recolectado">Recolectado</span>
-              <span className="etiqueta-ruta entregado">Entregado</span>
-            </div>
-          </div>
-
-          <div className="inicio-busqueda-card">
+        <div className="inicio-busqueda-card">
             <h2>Rastreá tu pedido</h2>
             <p className="inicio-busqueda-sub">
               Ingresá tu número de seguimiento para ver por dónde va.
@@ -283,8 +254,38 @@ export default function Inicio({ onEntrar }: Props) {
               </div>
             )}
           </div>
-        </div>
-      </header>
+      </section>
+
+      <ol className="inicio-estados">
+        <li className="inicio-estado">
+          <span className="inicio-estado-cab">
+            <span className="inicio-estado-punto" style={{ background: "#64748b" }} />
+            Pendiente
+          </span>
+          <p>El pedido está cargado y todavía sin conductor asignado.</p>
+        </li>
+        <li className="inicio-estado">
+          <span className="inicio-estado-cab">
+            <span className="inicio-estado-punto" style={{ background: "#334155" }} />
+            Asignado
+          </span>
+          <p>Un conductor lo tiene asignado y va en camino a recogerlo.</p>
+        </li>
+        <li className="inicio-estado">
+          <span className="inicio-estado-cab">
+            <span className="inicio-estado-punto" style={{ background: "#7c3aed" }} />
+            Recolectado
+          </span>
+          <p>Ya está en manos del conductor, en ruta hacia la entrega.</p>
+        </li>
+        <li className="inicio-estado">
+          <span className="inicio-estado-cab">
+            <span className="inicio-estado-punto" style={{ background: "#16a34a" }} />
+            Entregado
+          </span>
+          <p>Entregado en destino. El historial queda disponible para consultar.</p>
+        </li>
+      </ol>
 
       {evidencia && (
         <EvidenciaModal
@@ -294,60 +295,10 @@ export default function Inicio({ onEntrar }: Props) {
         />
       )}
 
-      <section className="inicio-seccion">
-        <div className="inicio-seccion-interior">
-          <h2>Qué hacemos</h2>
-          <p className="inicio-seccion-sub">
-            Conectamos a comercios y personas con el motorista correcto, y le damos a cada entrega
-            un número para seguirla de principio a fin.
-          </p>
-
-          <div className="inicio-tarjetas">
-            <div className="inicio-tarjeta">
-              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 8v8a2 2 0 0 1-1 1.73l-7 4a2 2 0 0 1-2 0l-7-4A2 2 0 0 1 3 16V8a2 2 0 0 1 1-1.73l7-4a2 2 0 0 1 2 0l7 4A2 2 0 0 1 21 8z" />
-                <path d="M3.3 7l8.7 5 8.7-5" />
-                <path d="M12 22V12" />
-              </svg>
-              <h3>Recogida y entrega en el día</h3>
-              <p>
-                Tu paquete se recoge en el origen y llega puerta a puerta con un repartidor
-                asignado desde el inicio.
-              </p>
-            </div>
-
-            <div className="inicio-tarjeta">
-              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-              <h3>Seguimiento en cada etapa</h3>
-              <p>
-                Con tu número de seguimiento ves la línea de tiempo y el punto de entrega en el
-                mapa, sin necesidad de crear cuenta.
-              </p>
-            </div>
-
-            <div className="inicio-tarjeta">
-              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              <h3>Un solo panel para tu empresa</h3>
-              <p>
-                Administradores y conductores coordinan paquetes, vehículos y repartos desde un
-                mismo lugar.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <footer className="inicio-pie">
         <p>Sistema de Gestión de Transporte y Entregas · El Salvador</p>
-        <span className="inicio-pie-version">build v1.0 · prueba de flujo GitHub</span>
         <button type="button" className="link-suave" onClick={onEntrar}>
-          Acceso administrativo
+          Acceso
         </button>
       </footer>
     </main>

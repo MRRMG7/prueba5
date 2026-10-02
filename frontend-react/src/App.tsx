@@ -5,18 +5,14 @@ import Inicio from "./pages/Inicio";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ConductorPanel from "./pages/ConductorPanel";
 import ProveedorPanel from "./pages/ProveedorPanel";
-import RegistroConductor from "./pages/RegistroConductor";
 import RegistroProveedor from "./pages/RegistroProveedor";
 
-type Vista = "inicio" | "login" | "registro" | "registro-proveedor";
+type Vista = "inicio" | "login" | "registro-proveedor";
 
 function Router() {
   const { sesion, logout } = useAuth();
   const [vista, setVista] = useState<Vista>("inicio");
   if (!sesion) {
-    if (vista === "registro") {
-      return <RegistroConductor onVolver={() => setVista("login")} />;
-    }
     if (vista === "registro-proveedor") {
       return <RegistroProveedor onVolver={() => setVista("login")} />;
     }
@@ -24,7 +20,6 @@ function Router() {
       return (
         <Login
           onVolver={() => setVista("inicio")}
-          onRegistro={() => setVista("registro")}
           onRegistroProveedor={() => setVista("registro-proveedor")}
         />
       );

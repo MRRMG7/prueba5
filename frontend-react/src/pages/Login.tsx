@@ -4,11 +4,9 @@ import { useAuth } from "../auth";
 
 export default function Login({
   onVolver,
-  onRegistro,
   onRegistroProveedor,
 }: {
   onVolver?: () => void;
-  onRegistro?: () => void;
   onRegistroProveedor?: () => void;
 }) {
   const { login } = useAuth();
@@ -116,11 +114,6 @@ export default function Login({
             </button>
           </form>
 
-          {onRegistro && (
-            <button type="button" className="link-suave" onClick={onRegistro}>
-              ¿Sos repartidor? Crear cuenta
-            </button>
-          )}
           {onRegistroProveedor && (
             <button type="button" className="link-suave" onClick={onRegistroProveedor}>
               ¿Tenés un negocio? Registrar comercio

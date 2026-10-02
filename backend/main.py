@@ -11,12 +11,12 @@ from sqlalchemy.orm import Session
 from config.database import get_db, engine
 from config.security import verify_password, create_access_token
 from models.database_models import Base, ClienteModel, ConductorModel, RolEnum, UsuarioModel, HistorialPedidoModel, PedidoModel, ProveedorModel
-from models.schemas import LoginRequest, RegistroConductor, RegistroProveedor, CambiarPassword, Token, FotoPerfil, AprobarPedido, RecolectarPedido
+from models.schemas import LoginRequest, RegistroProveedor, CambiarPassword, Token, FotoPerfil, AprobarPedido, RecolectarPedido
 from routes import clientes, conductores, vehiculos, pedidos, auditoria, perfil, proveedores
 from routes.auth import (
     get_current_user,
     get_current_user_optional,
-    registrar_conductor,
+    require_admin,
     registrar_proveedor,
     cambiar_password,
 )
@@ -247,15 +247,6 @@ def login_for_access_token(
         "username": user.username,
     }
 
-@app.post("/registro-conductor", status_code=status.HTTP_201_CREATED)
-def registrar_conductor_route(registro: RegistroConductor, db: Session = Depends(get_db)):
-    resultado = registrar_conductor(registro, db)
-    auditoria.registrar(
-        db, resultado.get("username"), "CONDUCTOR_ALTAREGISTRO",
-        f"Autoregistro de conductor {resultado.get('nombre')}",
-    )
-    return resultado
-
 @app.post("/registro-proveedor", status_code=status.HTTP_201_CREATED)
 def registrar_proveedor_route(registro: RegistroProveedor, db: Session = Depends(get_db)):
     resultado = registrar_proveedor(registro, db)
@@ -325,7 +316,7 @@ def get_conductores_route(db: Session = Depends(get_db)):
 def crear_conductor_route(
     conductor: conductores.ConductorBase,
     db: Session = Depends(get_db),
-    _user=Depends(get_current_user),
+    _user=Depends(require_admin),
 ):
     resultado = conductores.crear_conductor(conductor, db)
     auditoria.registrar(db, _user.username, "CONDUCTOR_CREAR", f"Conductor {resultado['id_conductor']}: {conductor.nombre} (user {resultado.get('username')})")
@@ -336,7 +327,7 @@ def actualizar_conductor_route(
     id_conductor: int,
     cond_in: conductores.ConductorBase,
     db: Session = Depends(get_db),
-    _user=Depends(get_current_user),
+    _user=Depends(require_admin),
 ):
     resultado = conductores.actualizar_conductor(id_conductor, cond_in, db)
     auditoria.registrar(db, _user.username, "CONDUCTOR_EDITAR", f"Conductor {id_conductor}: {cond_in.nombre}")
@@ -346,7 +337,7 @@ def actualizar_conductor_route(
 def eliminar_conductor_route(
     id_conductor: int,
     db: Session = Depends(get_db),
-    _user=Depends(get_current_user),
+    _user=Depends(require_admin),
 ):
     conductores.eliminar_conductor(id_conductor, db)
     auditoria.registrar(db, _user.username, "CONDUCTOR_ELIMINAR", f"Conductor {id_conductor}")

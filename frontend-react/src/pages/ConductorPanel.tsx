@@ -15,7 +15,7 @@ const COLOR_ESTADOS: Record<string, string> = {
   PENDIENTE: "#64748b",
   ASIGNADO: "#334155",
   RECOLECTADO: "#7c3aed",
-  ENTREGADO: "#2ec4b6",
+  ENTREGADO: "#16a34a",
   INCIDENCIA: "#f36c2e",
   CANCELADO: "#ef4b4b",
 };
@@ -251,7 +251,7 @@ export default function ConductorPanel() {
         <div className="marca">
           <span className="marca-icono" aria-hidden="true">
             <svg viewBox="0 0 32 32" width="22" height="22">
-              <path d="M4 20 C 9 8, 18 22, 28 6" fill="none" stroke="#2ec4b6" strokeWidth="2.6" strokeLinecap="round" />
+              <path d="M4 20 C 9 8, 18 22, 28 6" fill="none" stroke="#94a3b8" strokeWidth="2.6" strokeLinecap="round" />
               <circle cx="4" cy="20" r="3" fill="#f5a623" />
               <circle cx="28" cy="6" r="3" fill="#f5a623" />
             </svg>
@@ -280,7 +280,7 @@ export default function ConductorPanel() {
         <div className="fila-conteos">
           <TarjetaConteo valor={conteos.porRecolectar} etiqueta="Por recolectar" color="#334155" />
           <TarjetaConteo valor={conteos.recolectados} etiqueta="Recolectados" color="#7c3aed" />
-          <TarjetaConteo valor={conteos.entregados} etiqueta="Entregados" color="#2ec4b6" />
+          <TarjetaConteo valor={conteos.entregados} etiqueta="Entregados" color="#16a34a" />
           <TarjetaConteo valor={conteos.incidencias} etiqueta="Incidencias" color="#f36c2e" />
         </div>
 

@@ -11,7 +11,7 @@ export const ESTADO_META: Record<
   PENDIENTE: { etiqueta: "Pendiente", color: "#64748b", fondo: "#f1f5f9" },
   ASIGNADO: { etiqueta: "Asignado", color: "#334155", fondo: "#eef0f3" },
   RECOLECTADO: { etiqueta: "Recolectado", color: "#5b21b6", fondo: "rgba(124,58,237,.13)" },
-  ENTREGADO: { etiqueta: "Entregado", color: "#0b8378", fondo: "rgba(46,196,182,.14)" },
+  ENTREGADO: { etiqueta: "Entregado", color: "#15803d", fondo: "rgba(22,163,74,.14)" },
   INCIDENCIA: { etiqueta: "Incidencia", color: "#c2410c", fondo: "rgba(243,108,44,.14)" },
   CANCELADO: { etiqueta: "Cancelado", color: "#c23333", fondo: "rgba(239,75,75,.12)" },
 };

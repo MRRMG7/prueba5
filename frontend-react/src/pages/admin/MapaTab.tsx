@@ -12,7 +12,7 @@ const COLOR_ESTADOS: Record<string, string> = {
   PENDIENTE: "#64748b",
   ASIGNADO: "#334155",
   RECOLECTADO: "#7c3aed",
-  ENTREGADO: "#2ec4b6",
+  ENTREGADO: "#16a34a",
   INCIDENCIA: "#f36c2e",
   CANCELADO: "#ef4b4b",
 };

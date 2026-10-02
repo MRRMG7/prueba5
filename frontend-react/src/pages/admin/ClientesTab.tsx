@@ -179,7 +179,7 @@ export default function ClientesTab({ clientes, pedidos, onCambio }: Props) {
                       <td className="celda-suave">{c.email || "—"}</td>
                       <td className="celda-suave">{c.direccion}</td>
                       <td>
-                        <span className="pill" style={{ background: "rgba(46,196,182,.12)", color: "#0b8378" }}>
+                        <span className="pill" style={{ background: "rgba(71,85,105,.12)", color: "#334155" }}>
                           {envios.length}
                         </span>
                       </td>

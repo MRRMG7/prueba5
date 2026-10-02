@@ -40,7 +40,7 @@ export default function Login({
         <div className="marca">
           <span className="marca-icono" aria-hidden="true">
             <svg viewBox="0 0 32 32" width="22" height="22">
-              <path d="M4 20 C 9 8, 18 22, 28 6" fill="none" stroke="#2ec4b6" strokeWidth="2.6" strokeLinecap="round" />
+              <path d="M4 20 C 9 8, 18 22, 28 6" fill="none" stroke="#94a3b8" strokeWidth="2.6" strokeLinecap="round" />
               <circle cx="4" cy="20" r="3" fill="#f5a623" />
               <circle cx="28" cy="6" r="3" fill="#f5a623" />
             </svg>
@@ -71,8 +71,8 @@ export default function Login({
             <circle className="nodo" cx="60" cy="180" r="10" fill="#7c3aed" />
             <circle className="nodo-fuera" cx="330" cy="120" r="15" fill="rgba(124,58,237,.20)" />
             <circle className="nodo" cx="330" cy="120" r="10" fill="#7c3aed" />
-            <circle cx="590" cy="60" r="14" fill="rgba(46,196,182,.16)" />
-            <circle className="nodo" cx="590" cy="60" r="10" fill="#2ec4b6" />
+            <circle cx="590" cy="60" r="14" fill="rgba(71,85,105,.18)" />
+            <circle className="nodo" cx="590" cy="60" r="10" fill="#64748b" />
           </svg>
           <span className="etiqueta-ruta recolectado">Recolectado</span>
           <span className="etiqueta-ruta entregado">Entregado</span>

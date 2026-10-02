@@ -6,36 +6,13 @@ import PaquetesTab from "./PaquetesTab";
 import ConductoresTab from "./ConductoresTab";
 import VehiculosTab from "./VehiculosTab";
 import ClientesTab from "./ClientesTab";
-import TarjetaConteo from "../../components/TarjetaConteo";
 import CambiarPasswordModal from "../../components/CambiarPasswordModal";
 import MenuUsuario from "../../components/MenuUsuario";
-import GraficosResumen from "./GraficosResumen";
 import AuditoriaTab from "./AuditoriaTab";
 
-type Seccion = "resumen" | "paquetes" | "conductores" | "vehiculos" | "clientes" | "auditoria";
-
-const CONTEOS_COLORES: Record<string, string> = {
-  PENDIENTE: "#64748b",
-  ASIGNADO: "#334155",
-  RECOLECTADO: "#7c3aed",
-  ENTREGADO: "#2ec4b6",
-  INCIDENCIA: "#f36c2e",
-  CANCELADO: "#ef4b4b",
-  sinAsignar: "#94a3b8",
-};
-
-const CONTEOS_LABEL: Record<string, string> = {
-  PENDIENTE: "Pendientes",
-  ASIGNADO: "Asignados",
-  RECOLECTADO: "Recolectados",
-  ENTREGADO: "Entregados",
-  INCIDENCIA: "Incidencias",
-  CANCELADO: "Cancelados",
-  sinAsignar: "Sin asignar",
-};
+type Seccion = "paquetes" | "conductores" | "vehiculos" | "clientes" | "auditoria";
 
 const TITULOS: Record<Seccion, string> = {
-  resumen: "Panel de administración",
   paquetes: "Paquetes",
   conductores: "Conductores",
   vehiculos: "Vehículos",
@@ -46,15 +23,6 @@ const TITULOS: Record<Seccion, string> = {
 function Icono({ id }: { id: Seccion }) {
   const comunes = { width: 18, height: 18 } as const;
   switch (id) {
-    case "resumen":
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...comunes}>
-          <rect x="3" y="3" width="7" height="9" rx="1.5" />
-          <rect x="14" y="3" width="7" height="5" rx="1.5" />
-          <rect x="14" y="12" width="7" height="9" rx="1.5" />
-          <rect x="3" y="16" width="7" height="5" rx="1.5" />
-        </svg>
-      );
     case "paquetes":
       return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...comunes}>
@@ -103,7 +71,7 @@ function Icono({ id }: { id: Seccion }) {
 
 export default function AdminDashboard() {
   const { sesion, logout, setFoto } = useAuth();
-  const [seccion, setSeccion] = useState<Seccion>("resumen");
+  const [seccion, setSeccion] = useState<Seccion>("paquetes");
   const [modalPassword, setModalPassword] = useState(false);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [conductores, setConductores] = useState<Conductor[]>([]);
@@ -142,20 +110,9 @@ export default function AdminDashboard() {
     return () => clearInterval(id);
   }, []);
 
-  if (!sesion) return null;
+if (!sesion) return null;
 
-  const conteos = {
-    PENDIENTE: pedidos.filter((p) => p.estado === "PENDIENTE").length,
-    ASIGNADO: pedidos.filter((p) => p.estado === "ASIGNADO").length,
-    RECOLECTADO: pedidos.filter((p) => p.estado === "RECOLECTADO").length,
-    ENTREGADO: pedidos.filter((p) => p.estado === "ENTREGADO").length,
-    INCIDENCIA: pedidos.filter((p) => p.estado === "INCIDENCIA").length,
-    CANCELADO: pedidos.filter((p) => p.estado === "CANCELADO").length,
-    sinAsignar: pedidos.filter((p) => !p.id_conductor).length,
-  };
-
-  const navegacion: { id: Seccion; label: string }[] = [
-    { id: "resumen", label: "Resumen" },
+const navegacion: { id: Seccion; label: string }[] = [
     { id: "paquetes", label: "Paquetes" },
     { id: "conductores", label: "Conductores" },
     { id: "vehiculos", label: "Vehículos" },
@@ -169,7 +126,7 @@ export default function AdminDashboard() {
         <div className="side-marca marca">
           <span className="marca-icono" aria-hidden="true">
             <svg viewBox="0 0 32 32" width="22" height="22">
-              <path d="M4 20 C 9 8, 18 22, 28 6" fill="none" stroke="#2ec4b6" strokeWidth="2.6" strokeLinecap="round" />
+              <path d="M4 20 C 9 8, 18 22, 28 6" fill="none" stroke="#94a3b8" strokeWidth="2.6" strokeLinecap="round" />
               <circle cx="4" cy="20" r="3" fill="#f5a623" />
               <circle cx="28" cy="6" r="3" fill="#f5a623" />
             </svg>
@@ -216,66 +173,6 @@ export default function AdminDashboard() {
               />
             </div>
           </div>
-
-          {seccion === "resumen" && (
-            <>
-              <div className="fila-conteos">
-                {Object.keys(conteos).map((k) => (
-                  <TarjetaConteo
-                    key={k}
-                    valor={conteos[k as keyof typeof conteos]}
-                    etiqueta={CONTEOS_LABEL[k]}
-                    color={CONTEOS_COLORES[k]}
-                  />
-                ))}
-              </div>
-
-              <GraficosResumen pedidos={pedidos} />
-
-              <section className="tarjeta">
-                <div className="cabecera-tarjeta">
-                  <h2>Reparto por conductor</h2>
-                  <p>Pedidos que lleva cada conductor, entregados y con incidencias.</p>
-                </div>
-                <div className="cuerpo-tarjeta">
-                  <div className="overflow">
-                    <table className="tabla">
-                      <thead>
-                        <tr>
-                          <th>Conductor</th>
-                          <th>Por entregar</th>
-                          <th>Entregados</th>
-                          <th>Incidencias</th>
-                          <th>Licencia</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {conductores.length === 0 && (
-                          <tr>
-                            <td colSpan={5} className="celda-suave" style={{ textAlign: "center", padding: "28px 12px" }}>
-                              No hay conductores registrados.
-                            </td>
-                          </tr>
-                        )}
-                        {conductores.map((c) => {
-                          const de = pedidos.filter((p) => p.id_conductor === c.id_conductor);
-                          return (
-                            <tr key={c.id_conductor}>
-                              <td className="celda-fuerte">{c.nombre}</td>
-                              <td>{de.filter((p) => p.estado === "RECOLECTADO").length}</td>
-                              <td>{de.filter((p) => p.estado === "ENTREGADO").length}</td>
-                              <td>{de.filter((p) => p.estado === "INCIDENCIA").length}</td>
-                              <td className="celda-suave">{c.licencia || "—"}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </section>
-            </>
-          )}
 
           {seccion === "paquetes" && (
             <PaquetesTab

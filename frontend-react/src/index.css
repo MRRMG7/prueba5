@@ -105,6 +105,10 @@ input, select, textarea { font-family: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .marca-icono path,
   .marca-icono circle,
+  .ruta-animada .linea-flujo,
+  .ruta-animada .nodo,
+  .ruta-animada .nodo-fuera,
+  .etiqueta-ruta.recolectado,
   .paso-punto { animation: none; }
 }
 
@@ -147,16 +151,29 @@ stroke-linecap: round;
 }
 
 .ruta-animada .linea-flujo {
-stroke: #94a3b8;
+  stroke: var(--amber);
   stroke-width: 4.5;
   opacity: 0.95;
   fill: none;
   stroke-linecap: round;
+  stroke-dasharray: 18 640;
+  animation: avanzar-ruta 2.6s linear infinite;
+}
+
+@keyframes avanzar-ruta {
+  to { stroke-dashoffset: -658; }
 }
 
 /* nodos de la ruta */
 .ruta-animada .nodo, .ruta-animada .nodo-fuera {
-  opacity: 0.92;
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: brillo-nodo 2.2s ease-in-out infinite;
+}
+
+@keyframes brillo-nodo {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.16); }
 }
 
 /* etiquetas de la ruta */
@@ -178,6 +195,12 @@ stroke: #94a3b8;
   background: rgba(124, 58, 237, 0.16);
   border: 1px solid rgba(124, 58, 237, 0.42);
   transform: translate(-50%, -100%);
+  animation: flotar-recolectado 2.4s ease-in-out infinite;
+}
+
+@keyframes flotar-recolectado {
+  0%, 100% { transform: translate(-50%, -100%); }
+  50% { transform: translate(-50%, calc(-100% - 7px)); }
 }
 
 .etiqueta-ruta.entregado {
@@ -259,6 +282,14 @@ transform: translate(-50%, -150%);
   line-height: 1.55;
   color: var(--tinta-500);
 }
+
+.inicio-panel .ruta-animada {
+  margin: 0 0 24px;
+  min-height: 210px;
+}
+
+.inicio-panel .etiqueta-ruta.recolectado { top: 48%; }
+.inicio-panel .etiqueta-ruta.entregado { top: 26%; }
 
 .inicio-buscador .buscar-form { margin-top: 18px; width: 100%; }
 

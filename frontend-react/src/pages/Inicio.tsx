@@ -141,6 +141,27 @@ export default function Inicio({ onEntrar }: Props) {
 
       <div className="inicio-buscador">
         <div className="inicio-panel">
+          <div className="ruta-animada inicio-ruta" aria-hidden="true">
+            <svg viewBox="0 0 640 300" fill="none">
+              <path
+                className="linea-base"
+                d="M 60 180 C 150 70, 250 190, 330 120 C 400 60, 500 170, 590 60"
+              />
+              <path
+                className="linea-flujo"
+                d="M 60 180 C 150 70, 250 190, 330 120 C 400 60, 500 170, 590 60"
+              />
+              <circle className="nodo-fuera" cx="60" cy="180" r="15" fill="rgba(245,166,35,.22)" />
+              <circle className="nodo" cx="60" cy="180" r="10" fill="#f5a623" />
+              <circle className="nodo-fuera" cx="330" cy="120" r="15" fill="rgba(245,166,35,.22)" />
+              <circle className="nodo" cx="330" cy="120" r="10" fill="#f5a623" />
+              <circle cx="590" cy="60" r="14" fill="rgba(71,85,105,.16)" />
+              <circle className="nodo" cx="590" cy="60" r="10" fill="#64748b" />
+            </svg>
+            <span className="etiqueta-ruta recolectado">Recolectado</span>
+            <span className="etiqueta-ruta entregado">Entregado</span>
+          </div>
+
           <h1 className="inicio-panel-titulo">Rastreá tu pedido</h1>
           <p className="inicio-panel-sub">
             Ingresá tu número de seguimiento y enterate por dónde va.

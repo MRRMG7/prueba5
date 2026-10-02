@@ -119,9 +119,15 @@ export default function Inicio({ onEntrar }: Props) {
       </div>
 
       <div className="inicio-buscador">
-        <form onSubmit={buscar} className="buscar-form">
-          <input
-            value={busqueda}
+        <div className="inicio-panel">
+          <h1 className="inicio-panel-titulo">Rastreá tu pedido</h1>
+          <p className="inicio-panel-sub">
+            Ingresá tu número de seguimiento y enterate por dónde va.
+          </p>
+
+          <form onSubmit={buscar} className="buscar-form">
+            <input
+              value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
                 placeholder="Nº de seguimiento (ej. 1 o #1)"
               />
@@ -129,8 +135,9 @@ export default function Inicio({ onEntrar }: Props) {
                 {cargando ? "Buscando…" : "Ver estado"}
               </button>
             </form>
+        </div>
 
-            {error && <p className="aviso-banner rojo" style={{ marginTop: 14 }}>{error}</p>}
+            {error && <p className="aviso-banner rojo">{error}</p>}
 
             {pedido && meta && (
               <div className="inicio-resultado">
@@ -245,6 +252,7 @@ export default function Inicio({ onEntrar }: Props) {
           </div>
 
       <section className="inicio-info">
+        <div className="inicio-info-interior">
         <h2>Qué hacemos</h2>
         <p className="inicio-info-intro">
           Recogida y entrega puerta a puerta en El Salvador. Conectamos a comercios y personas con
@@ -275,6 +283,7 @@ export default function Inicio({ onEntrar }: Props) {
             </dd>
           </div>
         </dl>
+        </div>
       </section>
 
       {evidencia && (

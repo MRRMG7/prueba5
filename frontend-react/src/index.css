@@ -14,7 +14,6 @@
   --teal: #475569;
   --verde: #16a34a;
   --amber: #f5a623;
-  --amber-tenue: rgba(245, 166, 35, 0.07);
   --rojo: #ef4b4b;
   --radio-s: 3px;
   --radio-m: 4px;
@@ -36,7 +35,6 @@
   --teal: #94a3b8;
   --verde: #22c55e;
   --amber: #f8b043;
-  --amber-tenue: rgba(248, 176, 67, 0.09);
   --rojo: #f25a5a;
   color-scheme: dark;
 }
@@ -196,7 +194,7 @@ transform: translate(-50%, -150%);
    ========================================================= */
 .inicio {
   min-height: 100dvh;
-  background: var(--superficie);
+  background: var(--papel-000);
   display: flex;
   flex-direction: column;
 }
@@ -207,6 +205,7 @@ transform: translate(-50%, -150%);
   justify-content: space-between;
   align-items: center;
   gap: 16px;
+  background: var(--superficie);
   border-bottom: 1px solid var(--linea-borde);
 }
 
@@ -229,26 +228,51 @@ transform: translate(-50%, -150%);
 
 .inicio-buscador {
   flex: 1;
-  padding: 64px 24px;
+  padding: 52px 24px 44px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 18px;
 }
 
-.inicio-buscador .buscar-form { width: 100%; max-width: 420px; }
+.inicio-panel {
+  width: 100%;
+  max-width: 540px;
+  background: var(--superficie);
+  border: 1px solid var(--linea-borde);
+  border-top: 3px solid var(--amber);
+  border-radius: var(--radio-s);
+  padding: 26px 26px 24px;
+  box-shadow: 0 1px 2px rgba(22, 32, 43, 0.05), 0 10px 24px rgba(22, 32, 43, 0.05);
+}
+
+.inicio-panel-titulo {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--tinta-900);
+}
+
+.inicio-panel-sub {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--tinta-500);
+}
+
+.inicio-buscador .buscar-form { margin-top: 18px; width: 100%; }
 
 .inicio-buscador .inicio-resultado,
 .inicio-buscador .aviso-banner { width: 100%; max-width: 720px; }
 
 .inicio-info {
   width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 40px 24px;
+  padding: 44px 24px;
+  background: var(--superficie);
   border-top: 1px solid var(--linea-borde);
-  background: var(--amber-tenue);
 }
+
+.inicio-info-interior { max-width: 900px; margin: 0 auto; }
 
 .inicio-info h2 {
   margin: 0;
@@ -432,6 +456,7 @@ transform: translate(-50%, -150%);
 
 .inicio-pie {
   padding: 18px 24px;
+  background: var(--superficie);
   border-top: 1px solid var(--linea-borde);
   color: var(--tinta-300);
   font-size: 12.5px;
